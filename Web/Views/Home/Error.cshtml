@@ -21,9 +21,9 @@
     {
         { 400, "exclamation-triangle" },
         { 401, "lock" },
-        { 403, "ban" },
+        { 403, "slash-circle" },
         { 404, "search" },
-        { 500, "server" },
+        { 500, "hdd-rack" },
         { 0, "exclamation-circle" }
     };
     
@@ -45,13 +45,13 @@
 
 <div class="card shadow-sm">
     <div class="card-header d-flex align-items-center">
-        <i class="fas fa-@errorIcon me-2 text-danger"></i>
+        <i class="bi bi-@errorIcon me-2 text-danger"></i>
         <h5 class="mb-0">@errorTitle</h5>
     </div>
     <div class="card-body">
         <div class="text-center mb-4">
             <div class="display-1 text-danger mb-3">
-                <i class="fas fa-@errorIcon"></i>
+                <i class="bi bi-@errorIcon"></i>
             </div>
             <h4 class="text-danger">@errorTitle</h4>
             <p class="lead">@friendlyMessage</p>
@@ -60,7 +60,7 @@
         @if (isDevelopment)
         {
             <div class="alert alert-warning" role="alert">
-                <h5 class="alert-heading"><i class="fas fa-code me-2"></i>Geliştirici Bilgileri</h5>
+                <h5 class="alert-heading"><i class="bi bi-code-slash me-2"></i>Geliştirici Bilgileri</h5>
                 <hr>
                 <p><strong>Hata Kodu:</strong> @Model.StatusCode</p>
                 <p><strong>İstek ID:</strong> @Model.RequestId</p>
@@ -85,10 +85,10 @@
         
         <div class="text-center mt-4">
             <a href="/" class="btn btn-primary">
-                <i class="fas fa-home me-2"></i>Ana Sayfaya Dön
+                <i class="bi bi-house me-2"></i>Ana Sayfaya Dön
             </a>
             <button onclick="window.history.back()" class="btn btn-secondary ms-2">
-                <i class="fas fa-arrow-left me-2"></i>Geri Dön
+                <i class="bi bi-arrow-left me-2"></i>Geri Dön
             </button>
         </div>
     </div>

@@ -54,9 +54,9 @@
 						orderable: false,
 						render: function (data, type, row) {
 							let buttons = '';
-							buttons += `<a href="Kullanicilar/Edit/${row.id}" class="btn btn-secondary btn-sm me-1" title="Güncelle"><i class="fas fa-info-circle"></i></a>`;
-							buttons += `<button class="btn btn-warning btn-sm me-1" onclick="sifreSifirla(${row.kullaniciId}, '${row.username}')" title="Şifre sıfırla"><i class="fas fa-key"></i></button>`;
-							buttons += `<button class="btn btn-danger btn-sm me-1" onclick="deleteRecord('${deleteUrlBase}/${row.id}')" title="Sil"><i class="fas fa-trash"></i></button>`;
+							buttons += `<a href="Kullanicilar/Edit/${row.id}" class="btn btn-secondary btn-sm me-1" title="Güncelle"><i class="bi bi-info-circle"></i></a>`;
+							buttons += `<button class="btn btn-warning btn-sm me-1" onclick="sifreSifirla(${row.kullaniciId}, '${row.username}')" title="Şifre sıfırla"><i class="bi bi-key"></i></button>`;
+							buttons += `<button class="btn btn-danger btn-sm me-1" onclick="deleteRecord('${deleteUrlBase}/${row.id}')" title="Sil"><i class="bi bi-trash"></i></button>`;
 							return `<div class="btn-group">${buttons}</div>`;
 						}
 					},

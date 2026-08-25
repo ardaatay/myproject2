@@ -19,7 +19,7 @@
 			}
 			
 			<a href="javascript:void(0);" id="downloadExcelBtn" class="btn btn-success"><i
-					class="fas fa-file-excel"></i> Excel İndir</a>
+					class="bi bi-file-earmark-spreadsheet"></i> Excel İndir</a>
 			
 		</div>
 		<div class="card-body">
@@ -232,7 +232,7 @@
 							let buttons = '';
 
 							if (yGoruntule) {
-								buttons += `<a href="AgveSistemler/Detail/${row.id}" class="btn btn-secondary btn-sm me-1" title="Detay"><i class="fas fa-info-circle"></i></a>`;
+								buttons += `<a href="AgveSistemler/Detail/${row.id}" class="btn btn-secondary btn-sm me-1" title="Detay"><i class="bi bi-info-circle"></i></a>`;
 
 								const envanterdenCikis = row.envanterdenCikisTarihi === null;
 
@@ -240,16 +240,16 @@
 								const hasEditAccess = hasFullAccess || (envanterdenCikis && yDuzenle);
 
 								if (hasEditAccess) {
-									buttons += `<a href="AgveSistemler/Edit/${row.id}" class="btn btn-primary btn-sm me-1" title="Güncelle"><i class="fas fa-edit"></i></a>`;
+									buttons += `<a href="AgveSistemler/Edit/${row.id}" class="btn btn-primary btn-sm me-1" title="Güncelle"><i class="bi bi-pencil-square"></i></a>`;
 								}
 
 								if (hasFullAccess) {
-									buttons += `<a href="AgveSistemler/Copy/${row.id}" class="btn btn-warning btn-sm me-1" title="Kopyala"><i class="fas fa-copy"></i></a>`;
-									buttons += `<button class="btn btn-danger btn-sm me-1" onclick="deleteRecord('${deleteUrlBase}/${row.id}')" title="Sil"><i class="fas fa-trash"></i></button>`;
+									buttons += `<a href="AgveSistemler/Copy/${row.id}" class="btn btn-warning btn-sm me-1" title="Kopyala"><i class="bi bi-copy"></i></a>`;
+									buttons += `<button class="btn btn-danger btn-sm me-1" onclick="deleteRecord('${deleteUrlBase}/${row.id}')" title="Sil"><i class="bi bi-trash"></i></button>`;
 								}
 
 								if (yYonet) {
-									buttons += `<button class="btn btn-danger btn-sm" onclick="deleteDatabaseRecord('${deleteDatabaseUrlBase}/${row.id}')" title="Kalıcı Sil"><i class="fas fa-database"></i></button>`;
+									buttons += `<button class="btn btn-danger btn-sm" onclick="deleteDatabaseRecord('${deleteDatabaseUrlBase}/${row.id}')" title="Kalıcı Sil"><i class="bi bi-database"></i></button>`;
 								}
 							}
 
