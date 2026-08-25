@@ -59,13 +59,55 @@ dotnet run --project Web
 Bağlantı dizesi `Web/appsettings.Development.json` içinden okunur. Bu dosya
 depoya işlenmez; şablonu `.example` uzantılı sürümüdür.
 
+## Railway ile yayınlama
+
+Depoda `railway.json` bulunur: Railway kök dizindeki `Dockerfile` ile derler,
+sağlık kontrolü olarak `/health` ucunu kullanır ve tek örnek çalıştırır.
+
+Web servisine tanımlanacak değişkenler:
+
+```
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+HttpsYonlendirmesiAcik=false
+Veritabani__BaslangictaMigrateEt=true
+Veritabani__BaslangictaGorunumleriUygula=true
+Veritabani__BaslangicVerisiniKur=true
+Veritabani__YoneticiKullaniciAdi=admin
+Veritabani__YoneticiSifresi=<güçlü bir şifre>
+```
+
+`Postgres` yerine veritabanı servisinin paneldeki tam adını yazın. Uygulama URL
+biçimini Npgsql biçimine kendisi çevirdiği için ayrıca bağlantı dizesi kurmanız
+gerekmez. Dinlenecek portu Railway `PORT` değişkeniyle bildirir ve imaj bunu
+dikkate alır; hedef port ayarıyla uğraşmanız gerekmez.
+
+`HttpsYonlendirmesiAcik=false` zorunludur. TLS bağlantısını Railway sonlandırır,
+konteynere istek HTTP olarak ulaşır; ayar açık bırakılırsa yönlendirme döngüsü
+oluşur.
+
+**Kalıcı disk gerekir.** DataProtection anahtarları ve kullanıcı istatistikleri
+`/var/lib/varlik` altına yazılır. Railway'in dosya sistemi geçici olduğundan bu
+yola bir Volume bağlanmazsa her yeni dağıtımda anahtarlar değişir ve açık olan
+tüm oturumlar düşer. Aynı nedenle örnek sayısı 1'de kalmalıdır: dosya tabanlı
+anahtarlık birden fazla örnek arasında paylaşılmaz.
+
+İlk açılıştan sonra migration ve tohumlama satırlarını `false` yapabilirsiniz;
+tohumlama zaten kullanıcı varken hiçbir şey yapmaz.
+
+Özel ağ üzerinden bağlanırken (`*.railway.internal`) SSL gerekmez. Genel TCP
+vekilini kullanmanız gerekirse adresin sonuna `?sslmode=require` ekleyin;
+Npgsql 8'den beri `Require` şifreler ama sertifika zincirini doğrulamaz, bu
+yüzden ayrıca bir "sertifikaya güven" ayarı gerekmez.
+
 ## Konfigürasyon
 
 Tüm ayarlar ortam değişkeniyle geçersiz kılınabilir (`__` iç içe anahtarları ayırır).
 
 | Anahtar | Varsayılan | Açıklama |
 |---|---|---|
-| `ConnectionStrings__DefaultConnection` | — | PostgreSQL bağlantı dizesi |
+| `ConnectionStrings__DefaultConnection` | — | PostgreSQL bağlantı dizesi (Npgsql anahtar=değer biçimi) |
+| `DATABASE_URL` | — | Alternatif: `postgresql://kullanici:sifre@sunucu:port/veritabani`. Üstteki boşsa kullanılır, Npgsql biçimine çevrilir |
+| `PORT` | — | Dinlenecek port. Tanımlıysa imajdaki 8080 varsayılanını geçersiz kılar |
 | `Veritabani__BaslangictaMigrateEt` | `false` | Açılışta migration'ları uygula |
 | `Veritabani__BaslangictaGorunumleriUygula` | `false` | Açılışta SQL görünümlerini oluştur |
 | `Veritabani__BaslangicVerisiniKur` | `false` | Roller, kök birim ve yönetici hesabını tohumla |

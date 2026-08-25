@@ -46,4 +46,6 @@ ENV ASPNETCORE_URLS=http://+:8080 \
 
 EXPOSE 8080
 
-ENTRYPOINT ["dotnet", "Web.dll"]
+# Railway, Render gibi barındırıcılar dinlenecek portu PORT değişkeniyle
+# bildirir. Değişken varsa onu kullanırız; yoksa yukarıdaki 8080 geçerlidir.
+ENTRYPOINT ["/bin/sh", "-c", "if [ -n \"${PORT}\" ]; then export ASPNETCORE_URLS=http://0.0.0.0:${PORT}; fi; exec dotnet Web.dll"]

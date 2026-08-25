@@ -50,8 +50,9 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     options.SupportedUICultures = [kultur];
 });
 
-// DbContext'i servis olarak ekle
-builder.Services.AddRepositoryExt(builder.Configuration.GetConnectionString("DefaultConnection")!);
+// DbContext'i servis olarak ekle. Bağlantı dizesi ConnectionStrings bölümünden
+// ya da barındırıcının verdiği DATABASE_URL'den çözülür.
+builder.Services.AddRepositoryExt(VeritabaniBaglantisi.Coz(builder.Configuration));
 builder.Services.AddBusinessExt();
 builder.Services.AddSingleton<KullaniciIstatistikService>();
 builder.Services.AddScoped<IAktifOrganizasyon, AktifOrganizasyon>();
