@@ -830,15 +830,28 @@ td.bg-success, span.bg-success:not(.badge) {
     font-size: 12.5px;
 }
 
-.dataTables_wrapper .dataTables_length select,
 .dataTables_wrapper .dataTables_filter input {
     width: auto;
+    min-width: 190px;
     height: 32px;
     padding: 0 10px;
     border: 1px solid var(--ve-cizgi);
     border-radius: var(--ve-r-sm);
     font-size: 12.5px;
     color: var(--ve-metin);
+}
+
+/* Sağ dolgu açılır ok içindir; kısayol `padding` yazılırsa ok rakamın
+   üstüne biner. */
+.dataTables_wrapper .dataTables_length select {
+    width: auto;
+    height: 32px;
+    padding: 0 32px 0 10px;
+    border: 1px solid var(--ve-cizgi);
+    border-radius: var(--ve-r-sm);
+    font-size: 12.5px;
+    color: var(--ve-metin);
+    background-position: right 10px center;
 }
 
 .dataTables_wrapper .dataTables_info {

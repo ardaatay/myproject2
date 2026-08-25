@@ -1,0 +1,29 @@
+{
+  "_yorum": "DataTables Türkçe metinleri. CDN'deki resmi tr.json dosyasında infoPostFix alanı yanlışlıkla info metniyle doldurulmuş; infoPostFix her bilgi satırının sonuna eklendiği için metin tekrarlanıyor ('Kayıt yok0 kayıttan 1 - 0 arasındaki...'). Bu kopyada o alan hiç tanımlanmadı. Uygulama Buttons, Select, AutoFill gibi eklentileri yüklemediğinden yalnızca çekirdek metinler tutulur.",
+
+  "emptyTable": "Tabloda veri bulunmuyor",
+  "info": "_TOTAL_ kayıttan _START_ - _END_ arasındaki kayıtlar gösteriliyor",
+  "infoEmpty": "Kayıt yok",
+  "infoFiltered": "(_MAX_ kayıt içerisinden bulunan)",
+  "infoThousands": ".",
+  "lengthMenu": "Sayfada _MENU_ kayıt göster",
+  "loadingRecords": "Yükleniyor...",
+  "processing": "İşleniyor...",
+  "search": "Ara:",
+  "searchPlaceholder": "Arayın...",
+  "zeroRecords": "Eşleşen kayıt bulunamadı",
+  "thousands": ".",
+  "decimal": ",",
+
+  "paginate": {
+    "first": "İlk",
+    "last": "Son",
+    "next": "Sonraki",
+    "previous": "Önceki"
+  },
+
+  "aria": {
+    "sortAscending": ": artan sütun sıralamasını aktifleştir",
+    "sortDescending": ": azalan sütun sıralamasını aktifleştir"
+  }
+}
