@@ -1,0 +1,295 @@
+﻿@using Dto.AgveSistem
+@using Dto.Rapor
+@{
+    ViewData["Title"] = "Anasayfa";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Varlık Envanteri Özet Raporu</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Sistemde kayıtlı varlıkların güncel durumu aşağıda özetlenmiştir.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Ağ ve Sistemler -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow border-left-primary h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Ağ ve Sistemler</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.AgveSistemlerSayisi</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-server fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="@Url.Action("Index", "AgveSistemler")" class="btn btn-sm btn-primary">Detaylar <i
+                            class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Uygulamalar -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow border-left-success h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Uygulamalar</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.UygulamalarSayisi</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-laptop-code fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="@Url.Action("Index", "Uygulamalar")" class="btn btn-sm btn-success">Detaylar <i
+                            class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Taşınabilir Cihazlar ve Ortamlar -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow border-left-info h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Taşınabilir Cihazlar ve
+                                Ortamlar
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TasinabilirCihazlarSayisi</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-mobile-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="@Url.Action("Index", "TasinabilirCihazveOrtamlar")" class="btn btn-sm btn-info">Detaylar <i
+                            class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- IoT Cihazları -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow border-left-warning h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">IoT Cihazları</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.IoTCihazlariSayisi</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-microchip fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="@Url.Action("Index", "IoTCihazlari")" class="btn btn-sm btn-warning">Detaylar <i
+                            class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fiziksel Mekanlar -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow border-left-danger h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Fiziksel Mekanlar
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.FizikselMekanlarSayisi</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-building fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="@Url.Action("Index", "FizikselMekanlar")" class="btn btn-sm btn-danger">Detaylar <i
+                            class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personel -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow border-left-secondary h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">Personel</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.PersonelSayisi</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="@Url.Action("Index", "Personeller")" class="btn btn-sm btn-secondary">Detaylar <i
+                            class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Varlık Dağılımı</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="varlıkDagilimGrafigi"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Son Eklenen Varlıklar</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                            <tr>
+                                <th>Varlık Sahibi</th>
+                                <th>Varlık Kategorileri</th>
+                                <th>Eklenme Tarihi</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @if (ViewBag.SonEklenenVarliklar != null)
+                            {
+                                foreach (var varlik in (List<RaporAnasayfa>)ViewBag.SonEklenenVarliklar)
+                                {
+                                    <tr>
+                                        <td>@varlik.VarlikSahibi</td>
+                                        <td>@varlik.Kategori</td>
+                                        <td>@varlik.EklenmeTarihi.ToString("dd.MM.yyyy")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-center">Henüz varlık eklenmemiş.</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Sistem İstatistikleri</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card border-left-primary shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Toplam Giriş Sayısı
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.ToplamGirisSayisi</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-sign-in-alt fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Aktif Kullanıcı Sayısı
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.AktifKullaniciSayisi</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Varlık dağılım grafiği
+            var ctx = document.getElementById('varlıkDagilimGrafigi').getContext('2d');
+            var myChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Ağ ve Sistemler', 'Uygulamalar', 'Taşınabilir Cihazlar', 'IoT Cihazları', 'Fiziksel Mekanlar', 'Personel'],
+                    datasets: [{
+                        data: [
+                            @ViewBag.AgveSistemlerSayisi,
+                            @ViewBag.UygulamalarSayisi,
+                            @ViewBag.TasinabilirCihazlarSayisi,
+                            @ViewBag.IoTCihazlariSayisi,
+                            @ViewBag.FizikselMekanlarSayisi,
+                            @ViewBag.PersonelSayisi
+                        ],
+                        backgroundColor: [
+                            '#4e73df', // primary
+                            '#1cc88a', // success
+                            '#36b9cc', // info
+                            '#f6c23e', // warning
+                            '#e74a3b', // danger
+                            '#858796'  // secondary
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

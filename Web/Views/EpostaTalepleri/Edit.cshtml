@@ -1,0 +1,131 @@
+@model Dto.EpostaTalep.UpdateEpostaTalepDto
+
+@{
+	ViewData["Title"] = "Eposta Talepleri";
+}
+
+<div class="container-fluid">
+	<h1 class="mt-4">Eposta Talebi Düzenle</h1>
+	<div class="card mb-4">
+		<div class="card-body">
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+			<form asp-action="Edit" enctype="multipart/form-data" id="editForm">
+				<input type="hidden" asp-for="Id"/>
+				<div class="row">
+					<div class="col-md-6">
+						<div class="form-group mt-1">
+							<label asp-for="KurumId">Kurum</label>
+							<div class="d-flex align-items-center">
+								<select asp-for="KurumId" id="kategoriSelect"
+								        asp-items="ViewBag.Kurumlar" class="form-select">
+									<option value="">Seçiniz</option>
+								</select>
+							</div>
+							<span asp-validation-for="KurumId" class="text-danger"></span>
+						</div>
+						<div class="form-group mt-1">
+							<label asp-for="UcuncuTaraf">Üçüncü Taraf Firma veya Kişi</label>
+							<input asp-for="UcuncuTaraf" class="form-control"/>
+							<span asp-validation-for="UcuncuTaraf" class="text-danger"></span>
+						</div>
+						<div class="form-group mt-1">
+							<label asp-for="TalepEdilen">Talep Edilen E-Posta Hesabı</label>
+							<input asp-for="TalepEdilen" class="form-control"/>
+							<span asp-validation-for="TalepEdilen" class="text-danger"></span>
+						</div>
+						<div class="form-group mt-1">
+							<label asp-for="TalepEden">Talep Eden Kullanıcı</label>
+							<input asp-for="TalepEden" class="form-control"/>
+							<span asp-validation-for="TalepEden" class="text-danger"></span>
+						</div>
+						<div class="form-group mt-1">
+							<label asp-for="TalepNedeni">Talep Eden Birim</label>
+							<input asp-for="TalepNedeni" class="form-control"/>
+							<span asp-validation-for="TalepNedeni" class="text-danger"></span>
+						</div>
+						<div class="form-group mt-1">
+							<label asp-for="TalepSuresi">Talep Süresi</label>
+							<input asp-for="TalepSuresi" class="form-control"/>
+							<span asp-validation-for="TalepSuresi" class="text-danger"></span>
+						</div>
+						<div class="form-group mt-1">
+							<label asp-for="Dosya">Dosya</label>
+							<input asp-for="Dosya" type="file" class="form-control" accept=".pdf" required />
+                            <div id="dosyaUyariEdit" class="text-danger mt-1"></div>
+						</div>
+						<div class="form-group mt-1">
+							<input type="submit" value="Kaydet" class="btn btn-primary"/>
+							<a asp-action="Index" class="btn btn-secondary">İptal</a>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+    <script>
+        (function() {
+            const form = document.getElementById('editForm');
+            const fileInput = document.getElementById('Dosya');
+            const warn = document.getElementById('dosyaUyariEdit');
+            const MAX_BYTES = 20 * 1024 * 1024; // 20MB
+
+            function showWarn(msg) { warn.textContent = msg || ''; }
+
+            function basicChecks(file) {
+                if (!file) { showWarn('Lütfen bir dosya seçiniz.'); return false; }
+                if (file.size === 0) { showWarn('Dosya boş olamaz.'); return false; }
+                if (file.size > MAX_BYTES) { showWarn('Dosya boyutu en fazla 20MB olmalıdır.'); return false; }
+                const name = (file.name || '').toLowerCase();
+                if (!name.endsWith('.pdf')) { showWarn('Yalnızca PDF dosyaları yüklenebilir.'); return false; }
+                return true;
+            }
+
+            function validatePdfHeader(file) {
+                try {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const buf = new Uint8Array(e.target.result || []);
+                        const ok = buf.length >= 4 && buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46; // %PDF
+                        showWarn(ok ? '' : 'Geçersiz PDF dosyası.');
+                    };
+                    reader.onerror = function() { showWarn('Dosya okunamadı.'); };
+                    reader.readAsArrayBuffer(file.slice(0, 4));
+                } catch { /* no-op */ }
+            }
+
+            fileInput?.addEventListener('change', function() {
+                const f = this.files && this.files[0];
+                if (!basicChecks(f)) return;
+                validatePdfHeader(f);
+            });
+
+            form?.addEventListener('submit', function(ev) {
+                const f = fileInput && fileInput.files && fileInput.files[0];
+                if (!basicChecks(f)) {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    fileInput?.focus();
+                }
+            });
+        })();
+    </script>
+}

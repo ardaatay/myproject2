@@ -1,0 +1,51 @@
+﻿<!DOCTYPE html>
+<html lang="@UygulamaAyarlariOptions.Value.Kultur">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>@ViewData["Title"] - @UygulamaAyarlariOptions.Value.UygulamaAdi</title>
+    <link rel="icon" type="image/png" href="@UygulamaAyarlariOptions.Value.LogoYolu"/>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        .giris-sayfasi {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            background: #f2f4f7;
+        }
+        .giris-kart {
+            width: 100%;
+            max-width: 26rem;
+            border: 1px solid #dfe3e8;
+            border-radius: .5rem;
+            background: #fff;
+            padding: 2rem;
+        }
+        .giris-baslik {
+            text-align: center;
+            margin-bottom: 1.75rem;
+        }
+        .giris-baslik img { height: 56px; margin-bottom: .75rem; }
+        .giris-baslik h1 { font-size: 1.25rem; font-weight: 600; margin: 0; }
+    </style>
+</head>
+<body>
+<main class="giris-sayfasi">
+    <div class="giris-kart">
+        <div class="giris-baslik">
+            <img src="@UygulamaAyarlariOptions.Value.LogoYolu" alt="@UygulamaAyarlariOptions.Value.UygulamaAdi"/>
+            <h1>@UygulamaAyarlariOptions.Value.UygulamaAdi</h1>
+        </div>
+        @RenderBody()
+    </div>
+</main>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,130 @@
+@model Dto.KriptografiEnvanteri.UpdateKriptografiEnvanteriDto
+
+@{
+	ViewData["Title"] = "Kriptografi Envanteri";
+}
+
+<div class="container-fluid">
+	<h1 class="mt-4">Kriptografi Envanteri Detay</h1>
+	<div class="card mb-4">
+		<div class="card-body">
+			<div class="row">
+				<div class="col-md-6">
+					<div class="form-group mt-1">
+						<label asp-for="VarlikAdi">Varlık Adı</label>
+						<input asp-for="VarlikAdi" class="form-control" data-bs-toggle="tooltip" data-bs-placement="top"
+						       data-bs-title="Varlıkların birbirinden ayrılması için varlığın adının yazıldığı alandır."/>
+						<span asp-validation-for="VarlikAdi" class="text-danger"></span>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="VarlikSahibiId">Varlık Sahibi</label>
+						<select asp-for="VarlikSahibiId" asp-items="ViewBag.Birimler" class="form-select"
+						        id="varlikSahibiSelect" data-bs-toggle="tooltip" data-bs-placement="top"
+						        data-bs-title="Varlık sahibinin atandığı alandır.">
+							<option value="">Seçiniz</option>
+						</select>
+						<span asp-validation-for="VarlikSahibiId" class="text-danger"></span>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="VarlikSahibiAltDepartmanId">Varlık Sahibi Alt Departman</label>
+						<select asp-for="VarlikSahibiAltDepartmanId" asp-items="ViewBag.AltBirimler"
+						        data-bs-toggle="tooltip" data-bs-placement="top"
+						        data-bs-title="Varlık sahibi alt departmanın belirtildiği alandır."
+						        class="form-select" id="varlikSahibiAltDepartmanSelect">
+							<option value="">Seçiniz</option>
+						</select>
+						<span asp-validation-for="VarlikSahibiAltDepartmanId" class="text-danger"></span>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="UretimYeri">Üretim Yeri</label>
+						<input asp-for="UretimYeri" class="form-control"/>
+						<span asp-validation-for="UretimYeri" class="text-danger"></span>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="KullanimAmaci">Kullanım Amacı</label>
+						<input asp-for="KullanimAmaci" class="form-control" data-bs-toggle="tooltip"
+						       data-bs-placement="top"
+						       data-bs-title="Varlığın hangi amaçla kullanıldığının belirtildiği alandır."/>
+						<span asp-validation-for="KullanimAmaci" class="text-danger"></span>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="OlusturmaTarihi">Oluşturma Tarihi</label>
+						<input asp-for="OlusturmaTarihi" class="form-control" type="date"/>
+						<span asp-validation-for="OlusturmaTarihi" class="text-danger"></span>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="KullanimSuresi">Kullanım Süresi</label>
+						<div class="row">
+							<div class="col-10">
+								<input asp-for="KullanimSuresi" class="form-control"/>
+								<span asp-validation-for="KullanimSuresi" class="text-danger"></span>
+							</div>
+							<div class="col-2">
+								<select asp-for="KullanimSuresiTip" class="form-select">
+									<option value="">Seçiniz</option>
+									<option value="gün">Gün</option>
+									<option value="ay">Ay</option>
+									<option value="yıl">Yıl</option>
+								</select>
+								<span asp-validation-for="AnahtarSorumlusuId" class="text-danger"></span>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group mt-1">
+						<label asp-for="AnahtarSorumlusuId">Anahtar Sorumlusu</label>
+						<select asp-for="AnahtarSorumlusuId" asp-items="ViewBag.AnahtarSorumlulari" class="form-select"
+						        data-bs-toggle="tooltip" data-bs-placement="top"
+						        data-bs-title="Ömrünün takibi, yenilenmesi ve imhası süreçlerinin yönetilmesi">
+							<option value="">Seçiniz</option>
+						</select>
+						<span asp-validation-for="AnahtarSorumlusuId" class="text-danger"></span>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="AnahtarSaklamaAlani">Anahtar Saklama Alanı</label>
+						<input asp-for="AnahtarSaklamaAlani" class="form-control"/>
+						<span asp-validation-for="AnahtarSaklamaAlani" class="text-danger"></span>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="DestekAlinanTedarikci">Destek Alınan Tedarikçi</label>
+						<input asp-for="DestekAlinanTedarikci" class="form-control"/>
+						<span asp-validation-for="DestekAlinanTedarikci" class="text-danger"></span>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="DonanimYazilim">Donanım / Yazılım</label>
+						<input asp-for="DonanimYazilim" class="form-control"/>
+						<span asp-validation-for="DonanimYazilim" class="text-danger"></span>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="Algoritma">Algoritma</label>
+						<input asp-for="Algoritma" class="form-control"/>
+						<span asp-validation-for="Algoritma" class="text-danger"></span>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="OrtakKriterler">Ortak Kriterler</label>
+						<input asp-for="OrtakKriterler" class="form-control"/>
+						<span asp-validation-for="OrtakKriterler" class="text-danger"></span>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="KullanimSeviyesiId">Kullanım Seviyesi</label>
+						<select asp-for="KullanimSeviyesiId" asp-items="ViewBag.KullanimSeviyeleri" class="form-select">
+							<option value="">Seçiniz</option>
+						</select>
+						<span asp-validation-for="KullanimSeviyesiId" class="text-danger"></span>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="KullanimKabiliyetleri">Kullanım Kabiliyetleri</label>
+						<input asp-for="KullanimKabiliyetleri" class="form-control"/>
+						<span asp-validation-for="KullanimKabiliyetleri" class="text-danger"></span>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="Notlar">Not</label>
+						<textarea asp-for="Notlar" class="form-control" style="height: 150px; resize: both;"></textarea>
+						<span asp-validation-for="Notlar" class="text-danger"></span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

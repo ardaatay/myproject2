@@ -1,0 +1,679 @@
+@model Dto.BasiliBilgi.UpdateBasiliBilgiDto
+
+@{
+	ViewData["Title"] = "Basılı Bilgiler";
+}
+
+<div class="container-fluid">
+	<h1 class="mt-4">Basılı Bilgi Düzenle</h1>
+	<div class="card mb-4">
+		<div class="card-body">
+			<form asp-action="Edit">
+				<input type="hidden" asp-for="Id"/>
+				<input type="hidden" asp-for="VarlikSahibi"/>
+				<input type="hidden" asp-for="VarlikSahibiAltDepartman"/>
+				<input type="hidden" asp-for="OperasyonelSahibi"/>
+				<input type="hidden" asp-for="Konum"/>
+				<input type="hidden" asp-for="ErisilebilirlikId"/>
+				<div class="row">
+					<div class="col-md-6">
+						<div class="form-group mt-1">
+							<label asp-for="KategoriId">Varlık Kategorileri</label>
+							<div class="d-flex align-items-center">
+								<select asp-for="KategoriId" id="kategoriSelect" asp-items="ViewBag.Kategoriler"
+								        class="form-select" data-bs-toggle="tooltip" data-bs-placement="top"
+								        data-bs-title="Varlığın kategorisinin belirtildiği alandır.">
+									<option value="">Seçiniz</option>
+								</select>
+								<button class="btn btn-link ms-2" type="button" data-bs-toggle="collapse"
+								        data-bs-target="#kategoriAciklama" aria-expanded="false"
+								        aria-controls="kategoriAciklama">
+									<i class="fas fa-info-circle"></i>
+								</button>
+							</div>
+							<div class="collapse mt-2" id="kategoriAciklama">
+								<div class="card card-body">
+									<small>
+										<ul class="list-unstyled mb-0">
+											<li class="mt-2"><strong>Basılı Bilgiler:</strong> Fiziksel döküman veya
+												dökümanların gruplar halinde saklanabileceği tanımlanabilir (dosya
+												numarası veya benzersiz klasör ismi vb.) klasörler
+											</li>
+										</ul>
+									</small>
+								</div>
+							</div>
+							<span asp-validation-for="KategoriId" class="text-danger"></span>
+						</div>
+						<div id="altKategori" class="form-group mt-1">
+							<label asp-for="AltKategoriId">Varlık Grubu Adı</label>
+							<select asp-for="AltKategoriId" asp-items="ViewBag.AltKategoriler" id="altKategoriSelect"
+							        class="form-select" data-bs-toggle="tooltip" data-bs-placement="top"
+							        data-bs-title="Varlığın dahil olduğu Varlık Grubu Adı (Bilgi ve iletişim güvenliği rehberi)">
+								<option value="">Seçiniz</option>
+							</select>
+							<span asp-validation-for="AltKategoriId" class="text-danger"></span>
+						</div>
+						<div class="form-group mt-1">
+							<label asp-for="VarlikAdi">Varlık Adı</label>
+							<input asp-for="VarlikAdi" class="form-control" data-bs-toggle="tooltip"
+							       data-bs-placement="top"
+							       data-bs-title="Varlıkların birbirinden ayrılması için varlığın adının yazıldığı alandır."/>
+							<span asp-validation-for="VarlikAdi" class="text-danger"></span>
+						</div>
+						<div class="form-group mt-1">
+							<label asp-for="KullanimAmaci">Kullanım Amacı</label>
+							<input asp-for="KullanimAmaci" class="form-control" data-bs-toggle="tooltip"
+							       data-bs-placement="top"
+							       data-bs-title="Varlığın hangi amaçla kullanıldığının belirtildiği alandır."/>
+							<span asp-validation-for="KullanimAmaci" class="text-danger"></span>
+						</div>
+						<div class="form-group mt-1">
+							<label asp-for="Miktar">Miktar</label>
+							<input asp-for="Miktar" class="form-control" data-bs-toggle="tooltip"
+							       data-bs-placement="top"
+							       data-bs-title="Varlık kayıtları benzer özelliklere sahip olduğu durumlarda birden fazla aynı tip varlığın toplam adet şeklinde değerlendirilerek kayıt altına alınmaktadır. Bu tanıma uyan varlıklar için birim değeri seçilerek bu alana sayısal değerin girildiği alandır."/>
+							<span asp-validation-for="Miktar" class="text-danger"></span>
+						</div>
+						<div class="form-group mt-1">
+							<label asp-for="DurumId">Durum</label>
+							<div class="d-flex align-items-center">
+								<select asp-for="DurumId" asp-items="ViewBag.Durumlar" class="form-select"
+								        data-bs-toggle="tooltip" data-bs-placement="top"
+								        data-bs-title="Varlığın, mevcut durumunun belirtildiği alandır.">
+								</select>
+								<button class="btn btn-link ms-2" type="button" data-bs-toggle="collapse"
+								        data-bs-target="#durumAciklama" aria-expanded="false"
+								        aria-controls="durumAciklama">
+									<i class="fas fa-info-circle"></i>
+								</button>
+							</div>
+							<div class="collapse mt-2" id="durumAciklama">
+								<div class="card card-body">
+									<small>
+										<ul class="list-unstyled mb-0">
+											<li class="mt-2"><strong>Aktif Varlık:</strong> Hâlihazırda kullanımda olan,
+												kullanıcılar veya sistemler tarafından aktif olarak erişilen ve iş
+												süreçlerinde kullanılan varlıklardır.
+												<br/>
+												Örnekler: Kullanımda olan bilgisayarlar, sunucular, aktif yazılım
+												lisansları, açık sistemler, çalışan ağ cihazları vb.
+											</li>
+
+											<li class="mt-2"><strong>Pasif Varlık:</strong> İçerisinde çalışır durumda
+												sistem, uygulama veya bilgiler bulunan ancak şu anda aktif olarak
+												kullanılmayan, ihtiyaç halinde devreye alınmak üzere kapalı şekilde
+												saklanan varlıklardır.
+												<br/>
+												Örnekler: Acil durum için yedekte tutulan sunucular, kapalı tutulan ama
+												yapılandırılmış sistemler vb.
+											</li>
+
+											<li class="mt-2"><strong>Yedek/Fazlalık:</strong> Ana sistem veya varlıkta
+												bir sorun çıkması durumunda devreye girmek üzere hazırda tutulan, hizmet
+												sürekliliğini sağlamak amacıyla kullanılan yedek varlıklardır.
+												<br/>
+												Örnekler: Kapalı tutulan ama yapılandırılmamış sistemler, kullanılmayan
+												yedek cihazlar vb.
+											</li>
+
+											<li class="mt-2"><strong>Hurda Varlık:</strong> Artık işlevini yitirmiş,
+												kullanım dışı kalmış, ekonomik veya teknik ömrünü tamamlamış ve
+												sistemden çıkarılmış/çıkarılmaya aday varlıklardır.
+												<br/>
+												Örnekler: Geri dönüşüme gönderilen ya da uygun şekilde imha edilen
+												varlıklar.
+											</li>
+
+											<li class="mt-2"><strong>Bağış:</strong> Kurum dışına, genellikle kamu
+												yararına çalışan bir kuruluşa veya kişiye, resmi süreçler sonucunda ve
+												kayıt altına alınarak devredilen varlıklardır. Artık kurumun
+												kullanımında değildir.
+												<br/>
+												Örnekler: Kamuya ya da eğitim kurumlarına bağışlanan eski
+												bilgisayarlar, sistemler vb.
+											</li>
+										</ul>
+									</small>
+								</div>
+							</div>
+							<span asp-validation-for="DurumId" class="text-danger"></span>
+						</div>
+						<div class="form-group mt-1">
+							<label asp-for="KonumId">Konum</label>
+							<select asp-for="KonumId" asp-items="ViewBag.Konumlar" class="form-select" id="konumSelect"
+							        data-bs-toggle="tooltip" data-bs-placement="top"
+							        data-bs-title="Varlığın, fiziksel olarak bulunduğu yerin seçildiği alandır.">
+								<option value="">Seçiniz</option>
+							</select>
+							<span asp-validation-for="KonumId" class="text-danger"></span>
+						</div>
+						<div class="form-group mt-1">
+							<label asp-for="VarlikSahibiId">Varlık Sahibi</label>
+							<select asp-for="VarlikSahibiId" asp-items="ViewBag.Birimler" class="form-select"
+							        id="varlikSahibiSelect" data-bs-toggle="tooltip" data-bs-placement="top"
+							        data-bs-title="Varlık sahibinin atandığı alandır.">
+								<option value="">Seçiniz</option>
+							</select>
+							<span asp-validation-for="VarlikSahibiId" class="text-danger"></span>
+						</div>
+						<div class="form-group mt-1">
+							<label asp-for="VarlikSahibiAltDepartmanId">Varlık Sahibi Alt Departman</label>
+							<select asp-for="VarlikSahibiAltDepartmanId" asp-items="ViewBag.AltBirimler"
+							        data-bs-toggle="tooltip" data-bs-placement="top"
+							        data-bs-title="Varlık sahibi alt departmanın belirtildiği alandır."
+							        class="form-select" id="varlikSahibiAltDepartmanSelect">
+								<option value="">Seçiniz</option>
+							</select>
+							<span asp-validation-for="VarlikSahibiAltDepartmanId" class="text-danger"></span>
+						</div>
+						<div class="form-group mt-1">
+							<label asp-for="OperasyonelSahibiId">Operasyonel Sahibi</label>
+							<select asp-for="OperasyonelSahibiId" asp-items="ViewBag.OperasyonelBirimler"
+							        data-bs-toggle="tooltip" data-bs-placement="top"
+							        data-bs-title="Varlığın bakımından sorumlu grubun seçildiği alandır."
+							        class="form-select"
+							        id="operasyonelSahibiSelect">
+								<option value="">Seçiniz</option>
+							</select>
+							<span asp-validation-for="OperasyonelSahibiId" class="text-danger"></span>
+						</div>
+						<div class="card my-3">
+							<div class="card-header bg-success">
+								<h5>Varlık Grubu Kritiklik Derecelendirme</h5>
+							</div>
+							<div class="card-body">
+								<div class="form-group mt-1">
+									<label asp-for="BilgiSinifiId">Bilgi Sınıfı</label>
+									<div class="d-flex align-items-center">
+										<select asp-for="BilgiSinifiId" asp-items="ViewBag.BilgiSiniflari"
+										        class="form-select" data-bs-toggle="tooltip" data-bs-placement="top"
+										        data-bs-title="Varlıkların gizlilik sınıflarına göre sınıfının belirlendiği alandır.">
+											<option value="">Seçiniz</option>
+										</select>
+										<button class="btn btn-link ms-2" type="button" data-bs-toggle="collapse"
+										        data-bs-target="#bilgiSinifiAciklama" aria-expanded="false"
+										        aria-controls="bilgiSinifiAciklama">
+											<i class="fas fa-info-circle"></i>
+										</button>
+									</div>
+									<div class="collapse mt-2" id="bilgiSinifiAciklama">
+										<div class="card card-body">
+											<small>
+												<ul class="list-unstyled mb-0">
+													<li>
+														<strong>Çok Gizli:</strong> Bilgilerin ifşa edilmesi ya da
+														yetkisiz kişilerin eline geçmesi durumunda;
+														<ul>
+															<li>-Kurumun ekonomik çıkarları düzeltilemez seviyede
+																olumsuz etkilenebilir
+															</li>
+															<li>-Kurumun ulusal veya uluslararası düzeyde imaj ve
+																itibarı düzeltilemez seviyede olumsuz etkilenebilir.
+															</li>
+															<li>-Kurumun iş süreçleri düzeltilemez seviyede bozulur.
+															</li>
+														</ul>
+													</li>
+
+													<li class="mt-2">
+														<strong>Gizli:</strong> Bilgilerin ifşa edilmesi ya da yetkisiz
+														kişilerin eline geçmesi durumunda;
+														<ul>
+															<li>-Kurumun ekonomik çıkarları olumsuz etkilenebilir.</li>
+															<li>-Kurumun ulusal veya uluslararası düzeyde imaj ve
+																itibarı olumsuz etkilenebilir.
+															</li>
+															<li>-Yasalara veya düzenlemelere tabii bir gereksinim
+																karşılanamamış olur.
+															</li>
+															<li>-Kişisel veri erişim yetkisi dışından erişebileceği
+																şekilde ortaya çıkar.
+															</li>
+															<li>-Kurumun iş süreçlerinin yeniden planlanması gerekir.
+															</li>
+														</ul>
+													</li>
+
+													<li class="mt-2"><strong>Özel:</strong> Çok Gizli ve Gizli gizlilik
+														seviyesinde korunması gerekmeyen fakat izinsiz açıklandığı
+														takdirde, bir kimsenin, birimin veya grubun zarar görmesine yol
+														açacak yahut yarar sağlayacak bilgi
+													</li>
+
+													<li class="mt-2"><strong>Hizmete Özel:</strong> Çok Gizli ve Gizli
+														gizlilik seviyesinde korunması gerekmeyen; fakat öğrenmeleri
+														gerekenlerden başkası tarafından bilinmesine lüzum olmayan bilgi
+													</li>
+
+													<li class="mt-2"><strong>Kişiye Özel:</strong> Üzerinde bu kayıt
+														veya işareti taşıyan, sadece üzerinde adı olan kişiye teslim
+														edilen bilgi
+													</li>
+
+													<li class="mt-2"><strong>Tasnif Dışı:</strong> Kullanılması güvenlik
+														açısından önemli olmayan, Kurum içi veya dışındaki herkese açık
+														bilgilerdir. Örneğin web sitesi, duyurular ve benzeri.
+													</li>
+												</ul>
+											</small>
+										</div>
+									</div>
+									<span asp-validation-for="BilgiSinifiId" class="text-danger"></span>
+								</div>
+								<div class="form-group mt-1">
+									<label asp-for="GizlilikId">Gizlilik</label>
+									<div class="d-flex align-items-center">
+										<select asp-for="GizlilikId" asp-items="ViewBag.Gizlilikler" class="form-select"
+										        data-bs-toggle="tooltip" data-bs-placement="top"
+										        data-bs-title="Varlıkta işlenen en kritik bilginin açığa çıkması veya yetkisiz kişiler tarafından ele geçirilmesi durumunda;">
+											<option value="">Seçiniz</option>
+										</select>
+									</div>
+									<span asp-validation-for="GizlilikId" class="text-danger"></span>
+								</div>
+								<div class="form-group mt-1">
+									<label asp-for="ButunlukId">Bütünlük</label>
+									<div class="d-flex align-items-center">
+										<select asp-for="ButunlukId" asp-items="ViewBag.Butunlukler" class="form-select"
+										        data-bs-toggle="tooltip" data-bs-placement="top"
+										        data-bs-title="Varlıkta işlenen en kritik bilginin içeriğinin yetkisiz kişiler tarafından değiştirilmesi durumunda;">
+											<option value="">Seçiniz</option>
+										</select>
+									</div>
+									<span asp-validation-for="ButunlukId" class="text-danger"></span>
+								</div>
+								<div class="form-group mt-1">
+									<label asp-for="ErisilebilirlikId">Erişilebilirlik</label>
+									<select asp-for="ErisilebilirlikId" asp-items="ViewBag.Erisilebilirlikler"
+									        data-bs-toggle="tooltip" data-bs-placement="top"
+									        data-bs-title="Varlığa bağımlılığı bulunan hizmetlerde, hizmetin en yoğun olarak kullanıldığı periyodu göz önünde bulundurduğunuzda en fazla tolere edebildiğiniz devre dışı kalma süresi nedir?"
+									        class="form-select" id="erisilebilirlikSelect">
+										<option value="">Seçiniz</option>
+									</select>
+									<span asp-validation-for="ErisilebilirlikId" class="text-danger"></span>
+								</div>
+								<div class="form-group mt-1">
+									<label asp-for="EtkilenenKisiSayisiId">Etkilenen Kişi Sayısı</label>
+									<select asp-for="EtkilenenKisiSayisiId" asp-items="ViewBag.EtkilenenKisiSayilari"
+									        data-bs-toggle="tooltip" data-bs-placement="top"
+									        data-bs-title="Varlık üzerinde gizlilik, bütünlük ve erişilebilirlik boyutlarının tamamını etkileyecek, olası en kötü senaryoya sahip bir bilgi güvenliği ihlal olayı meydana geldiğinde doğrudan etkilenebilecek kişi sayısı;"
+									        class="form-select">
+										<option value="">Seçiniz</option>
+									</select>
+									<span asp-validation-for="EtkilenenKisiSayisiId" class="text-danger"></span>
+								</div>
+								<div class="form-group mt-1">
+									<label asp-for="ToplumsalSonucId">Toplumsal Sonuçlar</label>
+									<select asp-for="ToplumsalSonucId" asp-items="ViewBag.ToplumsalSonuclar"
+									        data-bs-toggle="tooltip" data-bs-placement="top"
+									        data-bs-title="Varlık üzerinde gizlilik, bütünlük ve erişilebilirlik boyutlarının tamamını etkileyecek, olası en kötü senaryoya sahip bir bilgi güvenliği ihlal olayı meydana geldiğinde karşılaşılan durum aşağıdaki sonuçlardan hangisine yol açar?"
+									        class="form-select">
+										<option value="">Seçiniz</option>
+									</select>
+									<span asp-validation-for="ToplumsalSonucId" class="text-danger"></span>
+								</div>
+								<div class="form-group mt-1">
+									<label asp-for="KurumsalSonucId">Kurumsal Sonuçlar</label>
+									<select asp-for="KurumsalSonucId" asp-items="ViewBag.KurumsalSonuclar"
+									        data-bs-toggle="tooltip" data-bs-placement="top"
+									        data-bs-title="Varlık üzerinde gizlilik, bütünlük ve erişilebilirlik boyutlarının tamamını etkileyecek, olası en kötü senaryoya sahip herhangi bir bilgi güvenliği ihlal olayı olduğunda söz konusu olayın Kuruma etkisi ne olur?"
+									        class="form-select">
+										<option value="">Seçiniz</option>
+									</select>
+									<span asp-validation-for="KurumsalSonucId" class="text-danger"></span>
+								</div>
+								<div class="form-group mt-1">
+									<label asp-for="SektorelEtkiId">Sektörel Etki</label>
+									<select asp-for="SektorelEtkiId" asp-items="ViewBag.SektorelEtkiler"
+									        data-bs-toggle="tooltip" data-bs-placement="top"
+									        data-bs-title="Varlığın hizmet verdiği sektöre etkisi nedir?"
+									        class="form-select">
+										<option value="">Seçiniz</option>
+									</select>
+									<span asp-validation-for="SektorelEtkiId" class="text-danger"></span>
+								</div>
+								<div class="form-group mt-1">
+									<label asp-for="BagimliVarlikId">Bağımlı Varlıklar</label>
+									<select asp-for="BagimliVarlikId" asp-items="ViewBag.BagimliVarliklar"
+									        data-bs-toggle="tooltip" data-bs-placement="top"
+									        data-bs-title="Diğer varlıkların (entegre olan diğer yazılımlar, sunucular vb.) yönetiminizdeki varlığa olan bağımlılığı göz önünde bulundurulduğunda, varlığınızın işlediği verinin (uygulanabilir durumlarda) gizlilik, bütünlük veya erişilebilirliğine zarar gelmesi durumunda;"
+									        class="form-select">
+										<option value="">Seçiniz</option>
+									</select>
+									<span asp-validation-for="BagimliVarlikId" class="text-danger"></span>
+								</div>
+							</div>
+						</div>
+						<div class="card my-3">
+							<div class="card-header bg-success">
+								<h5>İş Sürekliliği (1 - 43200 Dakika)</h5>
+							</div>
+							<div class="card-body">
+								<div class="form-group mt-1">
+									<label asp-for="Rpo">RPO</label>
+									<div class="row">
+										<div class="col-10">
+											<input asp-for="Rpo" class="form-control" type="number" min="0"
+											       data-bs-toggle="tooltip"
+											       data-bs-placement="top"
+											       data-bs-title="Varlıkta meydana  gelebilecek olası  bir felaket anında kabul edilebilir veri kaybının ne kadar olduğudur. Saat olarak belirtilmelidir."/>
+											<span asp-validation-for="Rpo" class="text-danger"></span>
+										</div>
+										<div class="col-2">
+											<select asp-for="RpoTip" class="form-select">
+												<option value="dakika">Dakika</option>
+												
+											</select>
+											<span asp-validation-for="RpoTip" class="text-danger"></span>
+										</div>
+									</div>
+								</div>
+								<div class="form-group mt-1">
+									<label asp-for="Rto">RTO</label>
+									<div class="row">
+										<div class="col-10">
+											<input asp-for="Rto" class="form-control" type="number" min="0"
+											       data-bs-toggle="tooltip"
+											       data-bs-placement="top"
+											       data-bs-title="Varlığın felaket yaşandıktan sonra felaket öncesinde sunulan hizmet ve süreçlere tekrar dönülmesi için katlanılacak sürenin belirtildiği alandır. Saat olarak belirtilmelidir."/>
+											<span asp-validation-for="Rto" class="text-danger"></span>
+										</div>
+										<div class="col-2">
+											<select asp-for="RtoTip" class="form-select">
+												<option value="dakika">Dakika</option>
+												
+											</select>
+											<span asp-validation-for="RtoTip" class="text-danger"></span>
+										</div>
+									</div>
+
+								</div>
+								<div class="form-group mt-1">
+									<label asp-for="Mtpd">MTPD</label>
+									<div class="row">
+										<div class="col-10">
+											<input asp-for="Mtpd" class="form-control" type="number" min="0"
+											       data-bs-toggle="tooltip"
+											       data-bs-placement="top"
+											       data-bs-title="Varlıkta olası kesintiye katlanılabilecek MAKSİMUM süredir. Saat olarak belirtilmelidir."/>
+											<span asp-validation-for="Mtpd" class="text-danger"></span>
+										</div>
+										<div class="col-2">
+											<select asp-for="MtpdTip" class="form-select">
+												<option value="dakika">Dakika</option>
+												
+											</select>
+											<span asp-validation-for="MtpdTip" class="text-danger"></span>
+										</div>
+									</div>
+								</div>
+								<div class="form-group mt-1">
+									<label asp-for="KurtarmaPlanlari">Kurtarma Planları</label>
+									<input asp-for="KurtarmaPlanlari" class="form-control" data-bs-toggle="tooltip"
+									       data-bs-placement="top"
+									       data-bs-title="Olası kesinti sırasında uygulanacak kurtarma planları."/>
+									<span asp-validation-for="KurtarmaPlanlari" class="text-danger"></span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="card my-3">
+							<div class="card-header bg-success">
+								<h5>Yedekleme</h5>
+
+							</div>
+							<div class="card-body">
+								<div class="form-group mt-1">
+									<label asp-for="YedeklemeTipiId">Yedekleme Tipi</label>
+									<div class="d-flex align-items-center">
+										<select asp-for="YedeklemeTipiId" asp-items="ViewBag.YedeklemeTipleri"
+										        class="form-select" data-bs-toggle="tooltip" data-bs-placement="top"
+										        data-bs-title="Varlığın yedekleme türünün belirtildiği alandır.">
+											<option value="">Seçiniz</option>
+										</select>
+										<button class="btn btn-link ms-2" type="button" data-bs-toggle="collapse"
+										        data-bs-target="#yedeklemeAciklama" aria-expanded="false"
+										        aria-controls="yedeklemeAciklama">
+											<i class="fas fa-info-circle"></i>
+										</button>
+									</div>
+									<div class="collapse mt-2" id="yedeklemeAciklama">
+										<div class="card card-body">
+											<small>
+												<ul class="list-unstyled mb-0">
+													<li><strong>Tam Yedekleme:</strong> Tam yedekleme, yedekleme için
+														yapılandırılan verilerin tam bir kopyasıdır. Ancak, daha fazla
+														kaynak tüketir, bu yedekleme türünü periyodik olarak almak
+														kaynak tüketimini azaltmak için faydalı olacaktır.
+													</li>
+
+													<li class="mt-2"><strong>Artımlı Yedekleme:</strong> Incremental
+														backup (Artımlı yedeklemeler) önceki yedeklemeden bu yana
+														yalnızca değişen verileri yedekleyerek kaynak tüketimini
+														azaltır.
+													</li>
+
+													<li class="mt-2">
+														<strong>Diferansiyel Yedekleme:</strong> Diferansiyel yedekleme,
+														son tam yedeklemeden bu yana değiştirilen verileri yedeklemeyi
+														sağlar.
+														<br>Artımlı yedekleme ve diferansiyel yedekleme arasında her
+														zaman bir yanlış anlama vardır. Özetlemek gerekirse,
+														diferansiyel yedekleme son tam yedeklemeden bu yana değiştirilen
+														tüm verileri içerirken, Artımlı yedekleme önceki yedeklemeden bu
+														yana değiştirilen tüm verileri içerir.
+													</li>
+
+													<li class="mt-2"><strong>Sentetik Yedekleme:</strong> Sentetik bir
+														tam yedekleme, tam bir yedekleme alır ve tam bir tam yedekleme
+														sağlamak için aşağıdaki artımlıları birleştirir. Sentetik tam
+														yedekleme bir kenara depolanır ve ardından artımlı
+														gerçekleştirilir.
+													</li>
+
+													<li class="mt-2">
+														<strong>Yansıtma Yedeklemesi:</strong> Yansıtma yedeklemesi, tam
+														bir yedeklemeye benzer, çünkü ad kaynak verilerin tam bir
+														kopyasıdır.
+														<br>Yansıtma yedeklemesi, hedefte yalnızca en yeni dosya
+														sürümünü depolar ve dosyalar kaynak olarak ayrı olarak
+														depolanır.
+													</li>
+
+													<li class="mt-2">
+														<strong>Sürekli Yedekleme:</strong> Sürekli Yedekleme, bir
+														değişiklik yapıldığında yedeklendiği şekliyle "gerçek zamanlı
+														yedekleme" olarak da adlandırılır.
+														<br>Önceki tüm yedekleme türleri düzenli aralıklarla
+														çalıştırılırken, sürekli yedekleme dosyı gerçek zamanlı olarak
+														izler ve değişiklik yapıldığında yedeklenir.
+													</li>
+												</ul>
+											</small>
+										</div>
+									</div>
+									<span asp-validation-for="YedeklemeTipiId" class="text-danger"></span>
+								</div>
+								<div class="card my-3" id="yedeklemecard">
+									<div class="card-body">
+										<div class="form-group mt-1">
+											<label asp-for="YedeklemeTuru">Yedekleme Türü</label>
+											<input asp-for="YedeklemeTuru" class="form-control" data-bs-toggle="tooltip"
+											       data-bs-placement="top"
+											       data-bs-title="Yedeklemede veri, imaj, konfigurasyon vb. türlerin belirtildiği alandır."/>
+											<span asp-validation-for="YedeklemeTuru" class="text-danger"></span>
+										</div>
+										<div class="form-group mt-1">
+											<label asp-for="YedeklemeSikligi">Yedekleme Sıklığı</label>
+											<input asp-for="YedeklemeSikligi" class="form-control"
+											       data-bs-toggle="tooltip" data-bs-placement="top"
+											       data-bs-title="Yedeklerin saatlik, günlük, haftalık, aylık vb. sıklığının belirtildiği alandır."/>
+											<span asp-validation-for="YedeklemeSikligi" class="text-danger"></span>
+										</div>
+										<div class="form-group mt-1">
+											<label asp-for="YedeklerinSaklamaSuresi">Yedeklerin Saklama Süresi</label>
+											<input asp-for="YedeklerinSaklamaSuresi" class="form-control"
+											       data-bs-toggle="tooltip" data-bs-placement="top"
+											       data-bs-title="Yedeklerin saklama sürelerinin belirtildiği alandır. (Kopya sayısı)"/>
+											<span asp-validation-for="YedeklerinSaklamaSuresi"
+											      class="text-danger"></span>
+										</div>
+										<div class="form-group mt-1">
+											<label asp-for="YedeklemeAlani">Yedekleme Alanı</label>
+											<input asp-for="YedeklemeAlani" class="form-control"
+											       data-bs-toggle="tooltip" data-bs-placement="top"
+											       data-bs-title="Yedeklerin nerede tutulduğunun belirtildiği alandır. (Storage,Backup Teyp, FKM vb.)"/>
+											<span asp-validation-for="YedeklemeAlani" class="text-danger"></span>
+										</div>
+										<div class="form-group mt-1">
+											<label asp-for="YedektenDonusPlani">Yedekten Dönüş Planı</label>
+											<input asp-for="YedektenDonusPlani" class="form-control"
+											       data-bs-toggle="tooltip" data-bs-placement="top"
+											       data-bs-title="Yedekten dönüş testi için planlanan tarih"/>
+											<span asp-validation-for="YedektenDonusPlani" class="text-danger"></span>
+										</div>
+										<div class="form-group mt-1">
+											<label asp-for="YedeklemeSorumlusuId">Yedekleme Sorumlusu</label>
+											<select asp-for="YedeklemeSorumlusuId"
+											        asp-items="ViewBag.YedeklemeSorumlulari" data-bs-toggle="tooltip"
+											        data-bs-placement="top"
+											        data-bs-title="Yedeklerin alınmasından ve geri dönüş testlerinin yapılmasından sorumlu kişidir."
+											        class="form-select">
+												<option value="">Seçiniz</option>
+											</select>
+											<span asp-validation-for="YedeklemeSorumlusuId" class="text-danger"></span>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="card my-3">
+							<div class="card-header bg-success">
+								<h5>Uygulama ve Teknoloji Alanlarına Yönelik Bilgiler</h5>
+							</div>
+							<div class="card-body">
+								<div class="form-check my-3">
+									<input asp-for="KisiselVeriBarindirma" class="form-check-input"
+									       data-bs-toggle="tooltip" data-bs-placement="top"
+									       data-bs-title="Bilgi varlığının içeriğinde kişisel veri bulundurup bulundurmadığının belirtildiği alan"/>
+									<label asp-for="KisiselVeriBarindirma" class="form-check-label">
+										Kişisel Veri
+										Barındırma
+									</label>
+									<span asp-validation-for="KisiselVeriBarindirma" class="text-danger"></span>
+								</div>
+							</div>
+						</div>
+						<div class="card my-3">
+							<div class="card-header bg-success">
+								<h5>Varlık Teknik Özellikleri</h5>
+							</div>
+							<div class="card-body">
+								<div class="form-group mt-1">
+									<label asp-for="SaklamaSuresi">Saklama Süresi</label>
+									<div class="row">
+										<div class="col-6">
+											<input asp-for="SaklamaSuresi" class="form-control" data-bs-toggle="tooltip"
+											       data-bs-placement="top"
+											       data-bs-title="Basılı dökümanların saklama sürelerinin belirtildiği alan."/>
+											<span asp-validation-for="SaklamaSuresi" class="text-danger"></span>
+										</div>
+										<div class="col-6">
+											<select asp-for="SaklamaSuresiTip" class="form-select">
+												<option value="">Seçiniz</option>
+												<option value="Gün">Gün</option>
+												<option value="Ay">Ay</option>
+												<option value="Yıl">Yıl</option>
+											</select>
+											<span asp-validation-for="SaklamaSuresiTip" class="text-danger"></span>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="form-group mt-1">
+							<input type="submit" value="Kaydet" class="btn btn-primary"/>
+							<a asp-action="Index" class="btn btn-secondary">İptal</a>
+						</div>
+					</div>
+				</div>
+				<div class="form-group mt-1">
+					<label asp-for="Notlar">Not</label>
+					<textarea asp-for="Notlar" class="form-control" style="height: 150px; resize: both;"></textarea>
+					<span asp-validation-for="Notlar" class="text-danger"></span>
+				</div>
+				<div class="form-group mt-1">
+					<input type="submit" value="Kaydet" class="btn btn-primary"/>
+					<a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+	
+	<script>
+		$(document).ready(function () {
+			$('#kategoriSelect').change(function () {
+				var kategoriId = $(this).val();
+				if (kategoriId) {
+					$.get('@Url.Action("GetAltKategoriler")', {kategoriId: kategoriId}, function (data) {
+						if (data == null) {
+							$('#altKategori').hide();
+							return;
+						}
+						$('#altKategoriSelect').empty();
+						$('#altKategoriSelect').append($('<option></option>').val('').text('Seçiniz'));
+						$.each(data, function (index, item) {
+							$('#altKategoriSelect').append($('<option></option>').val(item.value).text(item.text));
+						});
+					});
+				} else {
+					$('#altKategoriSelect').empty();
+					$('#altKategoriSelect').append($('<option></option>').val('').text('Seçiniz'));
+				}
+			});
+
+			$('#varlikSahibiSelect').change(function () {
+				const selectedText = $('#varlikSahibiSelect option:selected').text();
+				$('#VarlikSahibi').val(selectedText);
+
+				var birimId = $(this).val();
+				if (birimId) {
+					$.get('@Url.Action("GetAltBirimler")', {birimId: birimId}, function (data) {
+						$('#varlikSahibiAltDepartmanSelect').empty();
+						$('#varlikSahibiAltDepartmanSelect').append($('<option></option>').val('').text('Seçiniz'));
+						$.each(data, function (index, item) {
+							$('#varlikSahibiAltDepartmanSelect').append($('<option></option>').val(item.value).text(item.text));
+						});
+					});
+
+				} else {
+					$('#varlikSahibiAltDepartmanSelect').empty();
+					$('#varlikSahibiAltDepartmanSelect').append($('<option></option>').val('').text('Seçiniz'));
+				}
+			});
+
+			$('#varlikSahibiAltDepartmanSelect').change(function () {
+				const selectedText = $('#varlikSahibiAltDepartmanSelect option:selected').text();
+				$('#VarlikSahibiAltDepartman').val(selectedText);
+			});
+
+			$('#operasyonelSahibiSelect').change(function () {
+				const selectedText = $('#operasyonelSahibiSelect option:selected').text();
+				$('#OperasyonelSahibi').val(selectedText);
+			});
+
+			$('#konumSelect').change(function () {
+				const selectedText = $('#konumSelect option:selected').text();
+				$('#Konum').val(selectedText);
+			});
+		});
+	</script>
+}

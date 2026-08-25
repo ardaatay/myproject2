@@ -1,0 +1,54 @@
+@model Dto.Birim.UpdateBirimDto
+
+@{
+	ViewData["Title"] = "Birim Düzenle";
+}
+
+<div class="container-fluid">
+	<h1 class="mt-4">Birim Düzenle</h1>
+
+	<div class="card mb-4">
+		<div class="card-body">
+			<form asp-action="Edit" method="post">
+				<input type="hidden" asp-for="Id"/>
+				<div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 px-3 small"></div>
+
+				<div class="row">
+					<div class="col-md-6 mb-3">
+						<label asp-for="Ad" class="form-label">Birim Adı</label>
+						<input asp-for="Ad" class="form-control" autofocus/>
+						<span asp-validation-for="Ad" class="text-danger small"></span>
+					</div>
+
+					<div class="col-md-6 mb-3">
+						<label asp-for="UstId" class="form-label">Üst Birim</label>
+						<select asp-for="UstId" asp-items="ViewBag.UstBirimler" class="form-select">
+							<option value="">— Kök birim —</option>
+						</select>
+						<div class="form-text">Boş bırakılırsa birim ağacın köküne taşınır. Birimin kendi alt birimleri listede yer almaz.</div>
+					</div>
+
+					<div class="col-md-6 mb-3">
+						<label asp-for="Kod" class="form-label">Kod</label>
+						<input asp-for="Kod" class="form-control"/>
+						<div class="form-text">Kurumunuzun kendi birim kodlaması. Zorunlu değildir.</div>
+						<span asp-validation-for="Kod" class="text-danger small"></span>
+					</div>
+
+					<div class="col-md-6 mb-3">
+						<label asp-for="Sira" class="form-label">Sıra</label>
+						<input asp-for="Sira" type="number" class="form-control"/>
+						<div class="form-text">Aynı seviyedeki birimler arasında görüntüleme sırası.</div>
+					</div>
+				</div>
+
+				<button type="submit" class="btn btn-primary">Kaydet</button>
+				<a asp-action="Index" class="btn btn-secondary">Vazgeç</a>
+			</form>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial"/>
+}

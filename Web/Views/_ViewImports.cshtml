@@ -1,0 +1,10 @@
+@using Web
+@using Web.Models
+@using Web.Extensions
+@using Core.Configuration
+@using Core.Security
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Options
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@inject IOptions<UygulamaAyarlari> UygulamaAyarlariOptions
+@inject IAuthorizationService AuthorizationService

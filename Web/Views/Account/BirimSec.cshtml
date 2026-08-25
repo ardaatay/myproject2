@@ -1,0 +1,19 @@
+﻿@model List<Dto.KullaniciBirim.KullaniciBirimDto>
+
+@{
+    ViewBag.Title = "Birim Seç";
+}
+
+<form asp-action="BirimSec" method="post">
+    <div class="mb-3">
+        <label for="id" class="form-label">Birim</label>
+        <select id="id" name="id" class="form-select" required>
+            <option value="">Seçiniz</option>
+            @foreach (var b in Model)
+            {
+                <option value="@b.Id">@b.BirimAd</option>
+            }
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Seç</button>
+</form>

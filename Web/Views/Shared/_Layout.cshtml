@@ -1,0 +1,221 @@
+﻿<!DOCTYPE html>
+<html lang="@UygulamaAyarlariOptions.Value.Kultur">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>@ViewData["Title"] - @UygulamaAyarlariOptions.Value.UygulamaAdi</title>
+    <link rel="icon" type="image/png" href="@UygulamaAyarlariOptions.Value.LogoYolu"/>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+@if (TempData["ErrorMessage"] != null)
+{
+    <script>
+            $(document).ready(function() {
+                Swal.fire({
+                    title: 'Erişim Engellendi!',
+                    text: '@TempData["ErrorMessage"]',
+                    icon: 'error',
+                    confirmButtonText: 'Tamam'
+                });
+            });
+        </script>
+}
+    
+@if (TempData["SuccessMessage"] != null)
+{
+    <script>
+            $(document).ready(function() {
+                Swal.fire({
+                    title: 'Başarılı!',
+                    text: '@TempData["SuccessMessage"]',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            });
+        </script>
+}
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/" id="sidebarToggle">
+            <img src="@UygulamaAyarlariOptions.Value.LogoYolu" alt="@UygulamaAyarlariOptions.Value.UygulamaAdi" height="40">
+            @UygulamaAyarlariOptions.Value.UygulamaAdi
+        </a>
+        <div class="d-flex">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                @await Component.InvokeAsync("AktifBirim")
+            </ul>
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle" type="button" id="userDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-user-circle me-1"></i>
+                    <span>@User.Identity!.Name</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                   @*  <li>
+                        <a class="dropdown-item" href="/Profil">
+                            <i class="fas fa-user me-2"></i> Profil
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="/Ayarlar">
+                            <i class="fas fa-cog me-2"></i> Ayarlar
+                        </a>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li> *@
+                    <li>
+                        <a class="dropdown-item" href="/Account/Logout">
+                            <i class="fas fa-sign-out-alt me-2"></i> Çıkış Yap
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div id="sidebar-wrapper">
+    <div class="sidebar-heading">Ana Menü</div>
+    <div class="list-group list-group-flush mt-2">
+        @if (await AuthorizationService.YetkiliMi(User, Yetkiler.TeknikVarlikListele))
+        {
+            <a href="/AgveSistemler" class="list-group-item list-group-item-action"><i class="bi bi-hdd-network"></i>Ağ
+                ve Sistemler</a>
+            <a href="/Uygulamalar" class="list-group-item list-group-item-action">
+                <i
+                    class="bi bi-app"></i>Uygulamalar</a>
+            <a href="/TasinabilirCihazveOrtamlar" class="list-group-item list-group-item-action">
+                <i
+                    class="bi bi-laptop"></i>Taşınabilir Cihaz ve Ortamlar</a>
+            <a href="/IoTCihazlari" class="list-group-item list-group-item-action"><i class="bi bi-cpu"></i>IoT
+                Cihazları</a>
+            <a href="/FizikselMekanlar" class="list-group-item list-group-item-action"><i class="bi bi-building"></i>Fiziksel
+                Mekanlar</a>
+            <a href="/Personeller" class="list-group-item list-group-item-action">
+                <i
+                    class="bi bi-people"></i>Personel</a>
+            <a href="/KriptografiEnvanterleri" class="list-group-item list-group-item-action">
+                <i
+                    class="bi bi-shield-lock"></i>Kriptografi Envanteri</a>
+        }
+
+        @if (await AuthorizationService.YetkiliMi(User, Yetkiler.BilgiVarlikListele))
+        {
+            <a href="/BasiliBilgiler" class="list-group-item list-group-item-action"><i class="bi bi-printer"></i>Basılı
+                Bilgiler</a>
+            <a href="/ElektronikBilgiler" class="list-group-item list-group-item-action">
+                <i
+                    class="bi bi-file-earmark"></i>Elektronik Bilgiler</a>
+            <a href="/Veritabanlari" class="list-group-item list-group-item-action"><i class="bi bi-database"></i>Veritabanları</a>
+            <a href="/Surecler" class="list-group-item list-group-item-action">
+                <i
+                    class="bi bi-diagram-3"></i>Süreçler</a>
+            <a href="/EpostaTalepleri" class="list-group-item list-group-item-action">
+                <i class="fa-solid fa-envelope"></i>Eposta Talepleri</a>
+        }
+
+        @if (await AuthorizationService.YetkiliMi(User, Yetkiler.SistemYonet))
+        {
+            <div class="sidebar-heading mt-2">Raporlar</div>
+            <a href="/Raporlama" class="list-group-item list-group-item-action"><i class="bi bi-person"></i>Genel Rapor</a>
+            <div class="sidebar-heading mt-2">Tanımlamalar</div>
+            <a href="/Birimler" class="list-group-item list-group-item-action"><i class="bi bi-diagram-3"></i>Birimler</a>
+            <a href="/Kullanicilar" class="list-group-item list-group-item-action"><i class="bi bi-person"></i>Kullanıcılar</a>
+            <a href="/Roller" class="list-group-item list-group-item-action">
+                <i
+                    class="bi bi-person-badge"></i>Roller</a>
+            <a href="/KullaniciRoller" class="list-group-item list-group-item-action"><i class="bi bi-person-check"></i>Kullanıcı
+                Roller</a>
+            <a href="/AnahtarSorumlulari" class="list-group-item list-group-item-action"><i class="bi bi-key"></i>Anahtar
+                Sorumluları</a>
+            <a href="/BagimliVarliklar" class="list-group-item list-group-item-action"><i class="bi bi-link"></i>Bağımlı
+                Varlıklar</a>
+            <a href="/BilgiSiniflari" class="list-group-item list-group-item-action">
+                <i
+                    class="bi bi-journal-bookmark"></i>Bilgi Sınıfları</a>
+            <a href="/Butunlukler" class="list-group-item list-group-item-action"><i class="bi bi-check-circle"></i>Bütünlükler</a>
+            <a href="/DestekDurumlari" class="list-group-item list-group-item-action"><i class="bi bi-headset"></i>Destek
+                Durumları</a>
+            <a href="/Durumlar" class="list-group-item list-group-item-action">
+                <i
+                    class="bi bi-toggle-on"></i>Durumlar</a>
+            <a href="/Erisilebilirlikler" class="list-group-item list-group-item-action">
+                <i
+                    class="bi bi-hand-index"></i>Erişilebilirlikler</a>
+            <a href="/EtkilenenKisiSayilari" class="list-group-item list-group-item-action">
+                <i
+                    class="bi bi-people-fill"></i>Etkilenen Kişi Sayıları</a>
+            <a href="/Gizlilikler" class="list-group-item list-group-item-action"><i class="bi bi-eye-slash"></i>Gizlilikler</a>
+            <a href="/Kategoriler" class="list-group-item list-group-item-action"><i class="bi bi-tags"></i>Kategoriler</a>
+            <a href="/Konumlar" class="list-group-item list-group-item-action"><i class="bi bi-geo-alt"></i>Konumlar</a>
+            <a href="/KriptolojiTurleri" class="list-group-item list-group-item-action"><i class="bi bi-lock"></i>Kriptoloji
+                Türleri</a>
+            <a href="/KullanimSeviyeleri" class="list-group-item list-group-item-action"><i class="bi bi-bar-chart"></i>Kullanım
+                Seviyeleri</a>
+            <a href="/LisansTakipSorumlulari" class="list-group-item list-group-item-action">
+                <i
+                    class="bi bi-card-checklist"></i>Lisans Takip Sorumluları</a>
+            <a href="/SektorelEtkiler" class="list-group-item list-group-item-action"><i class="bi bi-building"></i>Sektörel
+                Etkiler</a>
+            <a href="/YedeklemeSorumlulari" class="list-group-item list-group-item-action"><i class="bi bi-save"></i>Yedekleme
+                Sorumluları</a>
+            <a href="/YedeklemeTipleri" class="list-group-item list-group-item-action"><i class="bi bi-archive"></i>Yedekleme
+                Tipleri</a>
+            <a href="/Kurumlar" class="list-group-item list-group-item-action"><i class="fa-solid fa-building"></i>Kurumlar</a>
+        }
+    </div>
+</div>
+
+<div class="overlay"></div>
+
+<div id="page-content-wrapper">
+    <div class="container-fluid">
+        <input type="hidden" id="errorMessage" value="@(TempData["ErrorMessage"] ?? ViewBag.ErrorMessage ?? "")"/>
+        <input type="hidden" id="errorStatusCode"
+               value="@(TempData["ErrorStatusCode"] ?? ViewBag.ErrorStatusCode ?? "")"/>
+        @RenderBody()
+    </div>
+    <footer class="footer mt-auto py-3">
+        <div class="container-fluid">
+            <div class="text-center text-muted">
+                © 2025 Bilgi Sistemleri Dairesi Başkanlığı
+            </div>
+        </div>
+    </footer>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+<script src="js/table-wrapper.js" asp-append-version="true"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    $(document).ready(function () {
+        const errorMessage = $("#errorMessage").val();
+        const errorStatusCode = $("#errorStatusCode").val();
+
+        if (errorMessage && errorMessage.length > 0) {
+            Sweetalert2.fire({
+                icon: 'error',
+                title: 'Hata' + (errorStatusCode ? ' (' + errorStatusCode + ')' : ''),
+                text: errorMessage,
+                confirmButtonText: 'Tamam'
+            });
+        }
+    });
+</script>
+
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

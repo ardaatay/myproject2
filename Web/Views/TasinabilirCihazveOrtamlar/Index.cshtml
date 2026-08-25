@@ -1,0 +1,463 @@
+﻿@model IEnumerable<Dto.TasinabilirCihazveOrtam.ListTasinabilirCihazveOrtamDto>
+
+@{
+	ViewData["Title"] = "Taşınabilir Cihaz ve Ortam";
+
+	var yGoruntule = await AuthorizationService.YetkiliMi(User, Yetkiler.TeknikVarlikGoruntule);
+	var yDuzenle = await AuthorizationService.YetkiliMi(User, Yetkiler.TeknikVarlikDuzenle);
+	var yOlustur = await AuthorizationService.YetkiliMi(User, Yetkiler.TeknikVarlikOlustur);
+	var yYonet = await AuthorizationService.YetkiliMi(User, Yetkiler.SistemYonet);
+}
+
+<div class="container-fluid">
+	<h1 class="mt-4">Taşınabilir Cihaz ve Ortamlar Listesi</h1>
+	<div class="card mb-4">
+		<div class="card-header">
+			@if (yOlustur)
+			{
+				<a asp-action="Create" class="btn btn-primary">Yeni Ekle</a>
+			}
+			
+			<a href="javascript:void(0);" id="downloadExcelBtn" class="btn btn-success">
+				<i class="fas fa-file-excel"></i> Excel İndir
+			</a>
+		</div>
+		<div class="card-body">
+			<div class="custom-search mb-3">
+				<div class="row g-3">
+
+					<div class="col-4">
+						<div class="mb-2">
+							<label class="form-label">Arama</label>
+							<input type="text" id="customSearch" placeholder="Ara..." class="form-control">
+						</div>
+
+						<div class="mb-2">
+							<label class="form-label fw-semibold">Birim Bazlı Arama</label>
+							<div class="ms-0">
+								<div class="mb-2">
+									<label class="form-label">Varlık Sahibi</label>
+									<select asp-items="ViewBag.Birimler" class="form-select"
+											id="varlikSahibiSelect" data-bs-toggle="tooltip"
+											data-bs-placement="top"
+											data-bs-title="Varlık sahibinin atandığı alandır.">
+										<option value="">Seçiniz</option>
+									</select>
+								</div>
+								<div class="mb-2">
+									<label class="form-label">Varlık Sahibi Alt Departman</label>
+									<select asp-items="ViewBag.AltBirimler" class="form-select"
+											id="varlikSahibiAltDepartmanSelect"
+											data-bs-toggle="tooltip" data-bs-placement="top"
+											data-bs-title="Varlık sahibi alt departmanın belirtildiği alandır.">
+										<option value="">Seçiniz</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-4">
+						<div class="mb-2">
+							<label class="form-label">Durum</label>
+							<select asp-items="ViewBag.Durumlar" class="form-select" id="durumSelect"
+									data-bs-toggle="tooltip"
+									data-bs-placement="top"
+									data-bs-title="Durum bilgisinin seçildiği alandır.">
+								<option value="">Seçiniz</option>
+							</select>
+						</div>
+					</div>
+
+				</div>
+
+				<div class="row mt-3">
+					<div class="col-12">
+						<button type="button" id="searchButton" class="btn btn-primary">Ara</button>
+					</div>
+				</div>
+			</div>
+			<div class="dual-scroll-container">
+				<div class="scroll-bar-top">
+					<input type="range" id="leftScrollBar" min="0" max="100" value="0" class="form-range">
+				</div>
+				<div id="tableWrapper" class="table-wrapper">
+					<table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+						<thead>
+						<tr>
+							<th>İşlemler</th>
+							<th>Varlık Kategorileri</th>
+							<th>Varlık Grubu Adı</th>
+							<th>Varlık Adı</th>
+							<th>Zimmet Sahibi</th>
+							<th>Kullanım Amacı</th>
+							<th>Miktar</th>
+							<th>Durum</th>
+							<th>Konum</th>
+							<th>Varlık Sahibi</th>
+							<th>Varlık Sahibi Alt Departman</th>
+							<th>Operasyonel Sahibi</th>
+							<th>Bilgi Sınıfı</th>
+							<th class="fixed-width-column">Gizlilik</th>
+							<th class="fixed-width-column">Bütünlük</th>
+							<th>Erişilebilirlik</th>
+							<th>Etkilenen Kişi Sayısı</th>
+							<th class="fixed-width-column">Toplumsal Sonuçlar</th>
+							<th class="fixed-width-column">Kurumsal Sonuçlar</th>
+							<th class="fixed-width-column">Sektörel Etki</th>
+							<th class="fixed-width-column">Bağımlı Varlıklar</th>
+							<th>RPO</th>
+							<th>RTO</th>
+							<th>MTPD</th>
+							<th>Kurtarma Planları</th>
+							<th>Yedekleme Tipi</th>
+							<th>Yedekleme Türü</th>
+							<th>Yedekleme Sıklığı</th>
+							<th>Yedeklerin Saklama Süresi</th>
+							<th>Yedekleme Alanı</th>
+							<th>Yedekten Dönüş Planı</th>
+							<th>Yedekleme Sorumlusu</th>
+							<th>Kriptoloji</th>
+							<th>Kriptoloji Türü</th>
+							<th>Kullanılan Kriptoloji</th>
+							<th>Anahtar Sorumlusu</th>
+							<th>Kişisel Veri Barındırma</th>
+							<th>Anlık Mesajlaşma Kullanımı</th>
+							<th>Bulut Bilişim</th>
+							<th>Yeni Gelişmeler ve Tedarik</th>
+							<th>Kritik Altyapı Sistemi</th>
+							<th>IP Adresi</th>
+							<th>İşletim Sistemi</th>
+							<th>Lisans Takip Sorumlusu</th>
+							<th>Marka / Model</th>
+							<th>Seri Numarası</th>
+							<th>Notlar</th>
+							<th>Envantere Giriş Tarihi</th>
+							<th>Envanter Güncelleme Tarihi</th>
+							<th>Envanterden Çıkış Tarihi</th>
+						</tr>
+						</thead>
+					</table>
+				</div>
+				<div class="scroll-bar-bottom">
+					<input type="range" id="rightScrollBar" min="0" max="100" value="0" class="form-range">
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	<script>
+		$(document).ready(function () {
+			/* Define global variables for shared scripts if needed */
+			const deleteUrlBase = '@Url.Action("Delete")';
+			const deleteDatabaseUrlBase = '@Url.Action("DeleteDatabase")';
+
+			const yGoruntule = @yGoruntule.ToString().ToLower();
+			const yDuzenle = @yDuzenle.ToString().ToLower();
+			const yOlustur = @yOlustur.ToString().ToLower();
+			const yYonet = @yYonet.ToString().ToLower();
+
+
+			function loadAltBirimler(birimId) {
+				return $.get('@Url.Action("GetAltBirimler")', { birimId: birimId }).then(function(data) {
+					$('#varlikSahibiAltDepartmanSelect').empty();
+					$('#varlikSahibiAltDepartmanSelect').append($('<option></option>').val('').text('Seçiniz'));
+					$.each(data, function(index, item) {
+						$('#varlikSahibiAltDepartmanSelect').append($('<option></option>').val(item.value).text(item.text));
+					});
+				});
+			}
+
+			const table = $('#dataTable').DataTable({
+				stateSave: true,
+				stateDuration: 60 * 60 * 24,
+				stateSaveParams: function(settings, data) {
+					// Dropdown değerlerini state objesine ekliyoruz
+					data.customFilterVarlikSahibi = $('#varlikSahibiSelect').val();
+					data.customFilterVarlikSahibiAltDepartman = $('#varlikSahibiAltDepartmanSelect').val();
+					data.customFilterDurum = $('#durumSelect').val();
+				},
+				stateLoadParams: function(settings, data) {
+					if (data.customFilterVarlikSahibi) {
+						$('#varlikSahibiSelect').val(data.customFilterVarlikSahibi);
+
+						// Asenkron yükleme ve değer atama
+						loadAltBirimler(data.customFilterVarlikSahibi).then(function() {
+							if (data.customFilterVarlikSahibiAltDepartman) {
+								$('#varlikSahibiAltDepartmanSelect').val(data.customFilterVarlikSahibiAltDepartman);
+
+								// Veriyi doğru filtreyle çekmek için tabloyu yeniden yükle (sayfalama konumunu koruyarak)
+								new $.fn.dataTable.Api(settings).ajax.reload(null, false);
+							}
+						});
+					}
+					$('#durumSelect').val(data.customFilterDurum);
+				},
+				processing: true,
+				serverSide: true,
+				ajax: {
+					url: '@Url.Action("GetTasinabilirCihazveOrtamlars", "TasinabilirCihazveOrtamlar")',
+					type: 'POST',
+					data: function (d) {
+						// Dropdown değerini ekle
+						d.varlikSahibi = $('#varlikSahibiSelect').val();
+						d.varlikSahibiAltDepartman = $('#varlikSahibiAltDepartmanSelect').val();
+						d.durumId = $('#durumSelect').val();
+
+						// JSON formatında gönder
+						return d;
+					}
+				},
+				dom: 'lrtip',
+				language: {
+					url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/tr.json'
+				},
+				columns: [
+					{
+						data: null,
+						orderable: false,
+						render: function (data, type, row) {
+							let buttons = '';
+
+							if (yGoruntule) {
+								buttons += `<a href="TasinabilirCihazveOrtamlar/Detail/${row.id}" class="btn btn-secondary btn-sm me-1" title="Detay"><i class="fas fa-info-circle"></i></a>`;
+
+								const envanterdenCikis = row.envanterdenCikisTarihi === null;
+
+								const hasFullAccess = yYonet || (envanterdenCikis && yOlustur);
+								const hasEditAccess = hasFullAccess || (envanterdenCikis && yDuzenle);
+
+								if (hasEditAccess) {
+									buttons += `<a href="TasinabilirCihazveOrtamlar/Edit/${row.id}" class="btn btn-primary btn-sm me-1" title="Güncelle"><i class="fas fa-edit"></i></a>`;
+								}
+
+								if (hasFullAccess) {
+									buttons += `<a href="TasinabilirCihazveOrtamlar/Copy/${row.id}" class="btn btn-warning btn-sm me-1" title="Kopyala"><i class="fas fa-copy"></i></a>`;
+									buttons += `<button class="btn btn-danger btn-sm me-1" onclick="deleteRecord('${deleteUrlBase}/${row.id}')" title="Sil"><i class="fas fa-trash"></i></button>`;
+								}
+
+								if (yYonet) {
+									buttons += `<button class="btn btn-danger btn-sm" onclick="deleteDatabaseRecord('${deleteDatabaseUrlBase}/${row.id}')" title="Kalıcı Sil"><i class="fas fa-database"></i></button>`;
+								}
+							}
+
+							return `<div class="btn-group">${buttons}</div>`;
+						}
+					},
+					{data: 'kategori'},
+					{data: 'altKategori'},
+					{data: 'varlikAdi'},
+					{data: 'zimmetSahibi'},
+					{data: 'kullanimAmaci'},
+					{data: 'miktar'},
+					{data: 'durum'},
+					{data: 'konum'},
+					{data: 'varlikSahibi'},
+					{data: 'varlikSahibiAltDepartman'},
+					{data: 'operasyonelSahibi'},
+					{data: 'bilgiSinifi'},
+					{data: 'gizlilik'},
+					{data: 'butunluk'},
+					{data: 'erisilebilirlik'},
+					{data: 'etkilenenKisiSayisi'},
+					{data: 'toplumsalSonuc'},
+					{data: 'kurumsalSonuc'},
+					{data: 'sektorelEtki'},
+					{data: 'bagimliVarlik'},
+					{data: 'rpo'},
+					{data: 'rto'},
+					{data: 'mtpd'},
+					{data: 'kurtarmaPlanlari'},
+					{data: 'yedeklemeTipi'},
+					{data: 'yedeklemeTuru'},
+					{data: 'yedeklemeSikligi'},
+					{data: 'yedeklerinSaklamaSuresi'},
+					{data: 'yedeklemeAlani'},
+					{data: 'yedektenDonusPlani'},
+					{data: 'yedeklemeSorumlusu'},
+					{data: 'kriptoloji'},
+					{data: 'kriptolojiTuru'},
+					{data: 'kullanilanKriptoloji'},
+					{data: 'anahtarSorumlusu'},
+					{data: 'kisiselVeriBarindirma'},
+					{data: 'anlikMesajlasmaKullanimi'},
+					{data: 'bulutBilisim'},
+					{data: 'yeniGelismelerveTedarik'},
+					{data: 'kritikAltyapiSistemi'},
+					{data: 'ipAdresi'},
+					{data: 'isletimSistemi'},
+					{data: 'lisansTakipSorumlusu'},
+					{data: 'markaModel'},
+					{data: 'seriNumarasi'},
+					{data: 'notlar'},
+					{
+						data: 'envantereGirisTarihi',
+						render: function (data) {
+							if (data === null || data === undefined || data === '') {
+								return ''; // Null değerler için gösterilecek metin
+							}
+
+							try {
+								var date = new Date(data);
+
+								// Geçersiz tarih kontrolü (Invalid Date)
+								if (isNaN(date.getTime())) {
+									return '';
+								}
+
+								return date.toLocaleDateString('tr-TR', {
+									day: '2-digit',
+									month: '2-digit',
+									year: 'numeric'
+								});
+							} catch (e) {
+								console.error('Tarih formatlanırken hata oluştu:', e);
+								return '';
+							}
+						}
+					},
+					{
+						data: 'envanterGuncellemeTarihi',
+						render: function (data) {
+							if (data === null || data === undefined || data === '') {
+								return ''; // Null değerler için gösterilecek metin
+							}
+
+							try {
+								var date = new Date(data);
+
+								// Geçersiz tarih kontrolü (Invalid Date)
+								if (isNaN(date.getTime())) {
+									return '';
+								}
+
+								return date.toLocaleDateString('tr-TR', {
+									day: '2-digit',
+									month: '2-digit',
+									year: 'numeric'
+								});
+							} catch (e) {
+								console.error('Tarih formatlanırken hata oluştu:', e);
+								return '';
+							}
+						}
+					},
+					{
+						data: 'envanterdenCikisTarihi',
+						render: function (data) {
+							if (data === null || data === undefined || data === '') {
+								return ''; // Null değerler için gösterilecek metin
+							}
+
+							try {
+								var date = new Date(data);
+
+								// Geçersiz tarih kontrolü (Invalid Date)
+								if (isNaN(date.getTime())) {
+									return '';
+								}
+
+								return date.toLocaleDateString('tr-TR', {
+									day: '2-digit',
+									month: '2-digit',
+									year: 'numeric'
+								});
+							} catch (e) {
+								console.error('Tarih formatlanırken hata oluştu:', e);
+								return '';
+							}
+						}
+					}
+				],
+				createdRow: function (row, data, dataIndex) {
+					// Son kolon (Envanterden Çıkış Tarihi) boş değilse satırı kırmızı yap
+					// Tablodaki son sütun indeksi (0'dan başlayarak)
+					var lastColumnIndex = $(row).find('td').length - 1;
+
+					// Son kolondaki değeri kontrol et
+					var lastColumnValue = $(row).find('td').eq(lastColumnIndex).text().trim();
+
+					if (lastColumnValue !== '') {
+						// Daha güçlü bir stil uygulama
+						$(row).attr('style', 'background-color: #ffcccc !important');
+
+						// Alternatif olarak bir sınıf ekleyip CSS'de tanımlayabiliriz
+						$(row).addClass('cikis-yapilmis');
+					}
+				},
+				// DataTables'ın kendi stil uygulamasını devre dışı bırakalım
+				"bAutoWidth": false,
+				"ordering": true,
+			});
+
+			$('#dataTable tbody').on('click', 'tr', function () {
+				if ($(this).hasClass('selected')) {
+					$(this).removeClass('selected');
+				} else {
+					table.$('tr.selected').removeClass('selected');
+					$(this).addClass('selected');
+				}
+			});
+
+			$('<style>')
+				.prop('type', 'text/css')
+				.html(`
+		            #dataTable tbody tr.selected {
+		                background-color: #ffff99 !important;
+		            }
+		        `)
+				.appendTo('head');
+
+			// Sayfa yüklendikten sonra tekrar kontrol edelim
+			setTimeout(function () {
+				$('#dataTable tbody tr').each(function () {
+					var lastColumnValue = $(this).find('td:last').text().trim();
+					if (lastColumnValue !== '') {
+						$(this).attr('style', 'background-color: #ffcccc !important');
+					}
+				});
+			}, 500);
+
+			$('#searchButton').on('click', function () {
+				var searchValue = $('#customSearch').val().toLowerCase();
+				table.search(searchValue).draw();
+			});
+
+			$('#varlikSahibiSelect').change(function () {
+				var birimId = $(this).val();
+				if (birimId) {
+					$.get('@Url.Action("GetAltBirimler")', {birimId: birimId}, function (data) {
+						$('#varlikSahibiAltDepartmanSelect').empty();
+						$('#varlikSahibiAltDepartmanSelect').append($('<option></option>').val('').text('Seçiniz'));
+						$.each(data, function (index, item) {
+							$('#varlikSahibiAltDepartmanSelect').append($('<option></option>').val(item.value).text(item.text));
+						});
+					});
+
+				} else {
+					$('#varlikSahibiAltDepartmanSelect').empty();
+					$('#varlikSahibiAltDepartmanSelect').append($('<option></option>').val('').text('Seçiniz'));
+				}
+			});
+
+			$('#downloadExcelBtn').on('click', function () {
+				// Arama ve filtreleme değerlerini al
+				const searchValue = $('#customSearch').val();
+				const varlikSahibi = isNaN($('#varlikSahibiSelect').val()) || $('#varlikSahibiSelect').val() === "" ? 0 : parseInt($('#varlikSahibiSelect').val());
+				const varlikSahibiAltDepartman = isNaN($('#varlikSahibiAltDepartmanSelect').val()) || $('#varlikSahibiAltDepartmanSelect').val() === "" ? 0 : parseInt($('#varlikSahibiAltDepartmanSelect').val());
+				const durumId = isNaN($('#durumSelect').val()) || $('#durumSelect').val() === "" ? 0 : parseInt($('#durumSelect').val());
+
+				// URL'yi oluştur
+				var url = '@Url.Action("DownloadExcel", "TasinabilirCihazveOrtamlar")?search=' + encodeURIComponent(searchValue) +
+					'&varlikSahibi=' + varlikSahibi +
+					'&varlikSahibiAltDepartman=' + varlikSahibiAltDepartman +
+					'&durumId=' + durumId;
+
+				// Dosyayı indir
+				window.location.href = url;
+			});
+		});
+	</script>
+} 

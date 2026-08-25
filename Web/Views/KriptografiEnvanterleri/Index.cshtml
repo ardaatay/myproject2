@@ -1,0 +1,318 @@
+﻿@model IEnumerable<Dto.KriptografiEnvanteri.ListKriptografiEnvanteriDto>
+
+@{
+	ViewData["Title"] = "Kriptografi Envanteri";
+
+	var yGoruntule = await AuthorizationService.YetkiliMi(User, Yetkiler.KriptoGoruntule);
+	var yDuzenle = await AuthorizationService.YetkiliMi(User, Yetkiler.KriptoDuzenle);
+	var yOlustur = await AuthorizationService.YetkiliMi(User, Yetkiler.KriptoOlustur);
+	var yYonet = await AuthorizationService.YetkiliMi(User, Yetkiler.SistemYonet);
+}
+
+<div class="container-fluid">
+	<h1 class="mt-4">Kriptografi Envanteri Listesi</h1>
+	<div class="card mb-4">
+		<div class="card-header">
+			@if (yOlustur)
+			{
+				<a asp-action="Create" class="btn btn-primary">Yeni Ekle</a>
+			}
+			
+			<a href="javascript:void(0);" id="downloadExcelBtn" class="btn btn-success">
+				<i class="fas fa-file-excel"></i> Excel İndir
+			</a>
+		</div>
+		<div class="card-body">
+			<div class="custom-search mb-3">
+				<div class="row">
+					<div class="col-md-1">
+						<label class="form-label">Arama:</label>
+					</div>
+					<div class="col-md-2">
+						<input type="text" id="customSearch" placeholder="Ara..." class="form-control">
+					</div>
+				</div>
+			</div>
+			<div class="dual-scroll-container">
+				<div class="scroll-bar-top">
+					<input type="range" id="leftScrollBar" min="0" max="100" value="0" class="form-range">
+				</div>
+				<div id="tableWrapper" class="table-wrapper">
+					<table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+						<thead>
+						<tr>
+							<th>İşlemler</th>
+							<th>Varlık Adı</th>
+							<th>Varlık Sahibi</th>
+							<th>Varlık Sahibi Alt Departman</th>
+							<th>Üretim Yeri</th>
+							<th>Kullanım Amacı</th>
+							<th>Oluşturma Tarihi</th>
+							<th>Kullanım Süresi</th>
+							<th>Anahtar Sorumlusu</th>
+							<th>Anahtar Saklama Alanı</th>
+							<th>Destek Alınan Tedarikçi</th>
+							<th>Donanım/Yazılım</th>
+							<th>Algoritma</th>
+							<th>Ortak Kriterler/ISO/IEC 19790-24759 Uyumu</th>
+							<th>Kullanım Seviyesi</th>
+							<th>Kullanım Kabiliyetleri</th>
+							<th>Notlar</th>
+							<th>Oluşturma Tarihi</th>
+							<th>Güncelleme Tarihi</th>
+							<th>Silinme Tarihi</th>
+						</tr>
+						</thead>
+					</table>
+				</div>
+				<div class="scroll-bar-bottom">
+					<input type="range" id="rightScrollBar" min="0" max="100" value="0" class="form-range">
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	<script>
+		$(document).ready(function () {
+			/* Define global variables for shared scripts if needed */
+			const deleteUrlBase = '@Url.Action("Delete")';
+			const deleteDatabaseUrlBase = '@Url.Action("DeleteDatabase")';
+
+			const yGoruntule = @yGoruntule.ToString().ToLower();
+			const yDuzenle = @yDuzenle.ToString().ToLower();
+			const yOlustur = @yOlustur.ToString().ToLower();
+			const yYonet = @yYonet.ToString().ToLower();
+
+
+			const table = $('#dataTable').DataTable({
+				stateSave: true,
+				stateDuration: 60 * 60 * 24,
+				processing: true,
+				serverSide: true,
+				ajax: {
+					url: '@Url.Action("GetKriptografiEnvanterleris", "KriptografiEnvanterleri")',
+					type: 'POST'
+				},
+				dom: 'lrtip',
+				language: {
+					url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/tr.json'
+				},
+				columns: [
+					{
+						data: null,
+						orderable: false,
+						render: function (data, type, row) {
+							let buttons = '';
+
+							if (yGoruntule) {
+								buttons += `<a href="KriptografiEnvanterleri/Detail/${row.id}" class="btn btn-secondary btn-sm me-1" title="Detay"><i class="fas fa-info-circle"></i></a>`;
+
+								const envanterdenCikis = row.envanterdenCikisTarihi === null;
+
+								const hasFullAccess = yYonet || (envanterdenCikis && yOlustur);
+								const hasEditAccess = hasFullAccess || (envanterdenCikis && yDuzenle);
+
+								if (hasEditAccess) {
+									buttons += `<a href="KriptografiEnvanterleri/Edit/${row.id}" class="btn btn-primary btn-sm me-1" title="Güncelle"><i class="fas fa-edit"></i></a>`;
+								}
+
+								if (hasFullAccess) {
+									buttons += `<a href="KriptografiEnvanterleri/Copy/${row.id}" class="btn btn-warning btn-sm me-1" title="Kopyala"><i class="fas fa-copy"></i></a>`;
+									buttons += `<button class="btn btn-danger btn-sm me-1" onclick="deleteRecord('${deleteUrlBase}/${row.id}')" title="Sil"><i class="fas fa-trash"></i></button>`;
+								}
+
+								if (yYonet) {
+									buttons += `<button class="btn btn-danger btn-sm" onclick="deleteDatabaseRecord('${deleteDatabaseUrlBase}/${row.id}')" title="Kalıcı Sil"><i class="fas fa-database"></i></button>`;
+								}
+							}
+
+							return `<div class="btn-group">${buttons}</div>`;
+						}
+					},
+					{data: 'varlikAdi'},
+					{data: 'varlikSahibi'},
+					{data: 'varlikSahibiAltDepartman'},
+					{data: 'uretimYeri'},
+					{data: 'kullanimAmaci'},
+					{
+						data: 'olusturmaTarihi', render: function (data) {
+							if (data === null || data === undefined || data === '') {
+								return ''; // Null değerler için gösterilecek metin
+							}
+
+							try {
+								var date = new Date(data);
+
+								// Geçersiz tarih kontrolü (Invalid Date)
+								if (isNaN(date.getTime())) {
+									return '';
+								}
+
+								return date.toLocaleDateString('tr-TR', {
+									day: '2-digit',
+									month: '2-digit',
+									year: 'numeric'
+								});
+							} catch (e) {
+								console.error('Tarih formatlanırken hata oluştu:', e);
+								return '';
+							}
+						}
+					},
+					{data: 'kullanimSuresi'},
+					{data: 'anahtarSorumlusu'},
+					{data: 'anahtarSaklamaAlani'},
+					{data: 'destekAlinanTedarikci'},
+					{data: 'donanimYazilim'},
+					{data: 'algoritma'},
+					{data: 'ortakKriterler'},
+					{data: 'kullanimSeviyesi'},
+					{data: 'kullanimKabiliyetleri'},
+					{data: 'notlar'},
+					{
+						data: 'createdDate',
+						render: function (data) {
+							if (data === null || data === undefined || data === '') {
+								return ''; // Null değerler için gösterilecek metin
+							}
+
+							try {
+								var date = new Date(data);
+
+								// Geçersiz tarih kontrolü (Invalid Date)
+								if (isNaN(date.getTime())) {
+									return '';
+								}
+
+								return date.toLocaleDateString('tr-TR', {
+									day: '2-digit',
+									month: '2-digit',
+									year: 'numeric'
+								});
+							} catch (e) {
+								console.error('Tarih formatlanırken hata oluştu:', e);
+								return '';
+							}
+						}
+					},
+					{
+						data: 'updatedDate',
+						render: function (data) {
+							if (data === null || data === undefined || data === '') {
+								return ''; // Null değerler için gösterilecek metin
+							}
+
+							try {
+								var date = new Date(data);
+
+								// Geçersiz tarih kontrolü (Invalid Date)
+								if (isNaN(date.getTime())) {
+									return '';
+								}
+
+								return date.toLocaleDateString('tr-TR', {
+									day: '2-digit',
+									month: '2-digit',
+									year: 'numeric'
+								});
+							} catch (e) {
+								console.error('Tarih formatlanırken hata oluştu:', e);
+								return '';
+							}
+						}
+					},
+					{
+						data: 'deletedDate',
+						render: function (data) {
+							if (data === null || data === undefined || data === '') {
+								return ''; // Null değerler için gösterilecek metin
+							}
+
+							try {
+								var date = new Date(data);
+
+								// Geçersiz tarih kontrolü (Invalid Date)
+								if (isNaN(date.getTime())) {
+									return '';
+								}
+
+								return date.toLocaleDateString('tr-TR', {
+									day: '2-digit',
+									month: '2-digit',
+									year: 'numeric'
+								});
+							} catch (e) {
+								console.error('Tarih formatlanırken hata oluştu:', e);
+								return '';
+							}
+						}
+					}
+				],
+				createdRow: function (row, data, dataIndex) {
+					// Son kolon (Envanterden Çıkış Tarihi) boş değilse satırı kırmızı yap
+					// Tablodaki son sütun indeksi (0'dan başlayarak)
+					var lastColumnIndex = $(row).find('td').length - 1;
+
+					// Son kolondaki değeri kontrol et
+					var lastColumnValue = $(row).find('td').eq(lastColumnIndex).text().trim();
+
+					if (lastColumnValue !== '') {
+						// Daha güçlü bir stil uygulama
+						$(row).attr('style', 'background-color: #ffcccc !important');
+
+						// Alternatif olarak bir sınıf ekleyip CSS'de tanımlayabiliriz
+						$(row).addClass('cikis-yapilmis');
+					}
+				},
+				// DataTables'ın kendi stil uygulamasını devre dışı bırakalım
+				"bAutoWidth": false,
+				"ordering": true,
+			});
+
+			$('#dataTable tbody').on('click', 'tr', function () {
+				if ($(this).hasClass('selected')) {
+					$(this).removeClass('selected');
+				} else {
+					table.$('tr.selected').removeClass('selected');
+					$(this).addClass('selected');
+				}
+			});
+
+			$('<style>')
+				.prop('type', 'text/css')
+				.html(`
+		            #dataTable tbody tr.selected {
+		                background-color: #ffff99 !important;
+		            }
+		        `)
+				.appendTo('head');
+
+			// Sayfa yüklendikten sonra tekrar kontrol edelim
+			setTimeout(function () {
+				$('#dataTable tbody tr').each(function () {
+					var lastColumnValue = $(this).find('td:last').text().trim();
+					if (lastColumnValue !== '') {
+						$(this).attr('style', 'background-color: #ffcccc !important');
+					}
+				});
+			}, 500);
+
+			$('#customSearch').on('keyup', function () {
+				table.search(this.value).draw();
+			});
+
+			$('#downloadExcelBtn').on('click', function () {
+				// Arama ve filtreleme değerlerini al
+				const searchValue = $('#customSearch').val();
+
+				// URL'yi oluştur
+				var url = '@Url.Action("DownloadExcel", "KriptografiEnvanterleri")?search=' + encodeURIComponent(searchValue);
+
+				// Dosyayı indir
+				window.location.href = url;
+			});
+		});
+	</script>
+} 

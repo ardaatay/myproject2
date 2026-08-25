@@ -1,0 +1,412 @@
+/* Genel yazı boyutunu küçültme */
+html, body {
+    font-size: 14px; /* Varsayılan font boyutunu küçültüyoruz */
+}
+
+/* Başlık boyutlarını küçültme */
+h1 {
+    font-size: 1.8rem;
+}
+
+h2 {
+    font-size: 1.6rem;
+}
+
+h3 {
+    font-size: 1.4rem;
+}
+
+h4 {
+    font-size: 1.2rem;
+}
+
+h5 {
+    font-size: 1.1rem;
+}
+
+h6 {
+    font-size: 1rem;
+}
+
+/* Form elemanlarının yazı boyutunu küçültme */
+.form-control, .form-select, .btn, .form-label, label {
+    font-size: 0.85rem;
+}
+
+/* Tablo yazı boyutunu küçültme */
+table, th, td {
+    font-size: 0.85rem;
+}
+
+/* Sidebar menü yazı boyutunu küçültme */
+.list-group-item {
+    font-size: 0.9rem;
+    padding: 0.6rem 1rem;
+}
+
+/* Card başlıklarını küçültme */
+.card-header {
+    font-size: 1rem;
+    padding: 12px 20px;
+}
+
+/* Navbar yazı boyutunu küçültme */
+.navbar-brand {
+    font-size: 1.1rem;
+}
+
+.nav-link {
+    font-size: 0.9rem;
+}:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #16a085;
+    --third-color: #e67e22;
+    --text-color: #333;
+    --bg-color: #f8f9fa;
+    --sidebar-width: 260px;
+    --header-height: 60px;
+    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --transition-speed: 0.3s;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    padding-top: var(--header-height);
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: all var(--transition-speed);
+}
+
+.navbar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: var(--header-height);
+    z-index: 1030;
+    background-color: var(--primary-color);
+    padding: 0 1rem;
+}
+
+.navbar-brand {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.navbar-brand img {
+    border-radius: 8px;
+}
+
+#sidebar-wrapper {
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    width: var(--sidebar-width);
+    height: calc(100vh - var(--header-height));
+    overflow-y: auto;
+    background: white;
+    z-index: 1020;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-heading {
+    padding: 1.2rem 1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    background-color: rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.list-group-item {
+    border: none;
+    border-radius: 0;
+    padding: 0.8rem 1rem;
+    margin-bottom: 2px;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.list-group-item i {
+    margin-right: 10px;
+    font-size: 1.1rem;
+}
+
+.list-group-item:hover {
+    background-color: rgba(22, 160, 133, 0.1);
+    color: var(--secondary-color);
+}
+
+.list-group-item.active {
+    background-color: var(--secondary-color);
+    color: white;
+    border-radius: 0 30px 30px 0;
+    margin-right: 10px;
+}
+
+#page-content-wrapper {
+    margin-left: var(--sidebar-width);
+    padding: 20px;
+    min-height: calc(100vh - var(--header-height));
+    transition: margin-left 0.3s ease;
+}
+
+.footer {
+    margin-top: auto;
+    background-color: #f8f9fa;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 15px 0;
+    font-size: 0.9rem;
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1015;
+}
+
+.menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.menu-toggle:focus {
+    outline: none;
+}
+
+.nav-user-dropdown .dropdown-toggle::after {
+    display: none;
+}
+
+.nav-user-dropdown .dropdown-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--secondary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+}
+
+.card {
+    border-radius: 10px;
+    border: none;
+    margin-bottom: 20px;
+    box-shadow: var(--card-shadow);
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 15px 20px;
+    font-weight: 600;
+    border-radius: 10px 10px 0 0;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #1a2733; /* Daha koyu versiyonu */
+    border-color: #1a2733;
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.btn-secondary:hover {
+    background-color: #13866f; /* Daha koyu versiyonu */
+    border-color: #13866f;
+}
+
+.btn-warning {
+    background-color: var(--third-color) !important;
+    border-color: var(--third-color) !important;
+    color: white !important;
+}
+
+.btn-warning:hover,
+.btn-warning:focus,
+.btn-warning:active {
+    background-color: #d35400 !important;
+    border-color: #d35400 !important;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    padding: 10px 15px;
+    border: 1px solid #ced4da;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 0.25rem rgba(22, 160, 133, 0.25);
+}
+
+/* Responsive styles */
+@media (max-width: 992px) {
+: root {
+    --sidebar-width: 240px;
+}
+}
+
+@media (max-width: 768px) {
+    #sidebar-wrapper {
+        transform: translateX(-100%);
+    }
+
+    body.sidebar-active #sidebar-wrapper {
+        transform: translateX(0);
+    }
+
+    #page-content-wrapper {
+        margin-left: 0;
+    }
+
+    .overlay {
+        display: none;
+        position: fixed;
+        top: var(--header-height);
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1015;
+    }
+
+    body.sidebar-active .overlay {
+        display: block;
+    }
+
+    .menu-toggle {
+        display: block;
+    }
+}
+
+.form-control {
+    height: calc(1.5em + 0.5rem + 2px);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+}
+
+form-check-input {
+    height: calc(1.5em + 0.5rem + 2px);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+}
+
+.form-select {
+    height: calc(1.5em + 0.5rem + 2px);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+}
+
+.bg-success {
+    background-color: var(--secondary-color) !important;
+    color: white !important;
+}
+
+.fixed-width-column {
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
+}
+
+.bg-danger-light {
+    background-color: #ffcccc !important; /* Açık kırmızı renk */
+}
+
+.cikis-yapilmis {
+    background-color: #ffcccc !important;
+}
+
+/* DataTables'ın kendi stillerini geçersiz kılmak için !important kullanıyoruz */
+#dataTable tbody tr.cikis-yapilmis td {
+    background-color: #ffcccc !important;
+}
+
+/* DataTables satır sayısı seçici düzeltmeleri */
+.dataTables_wrapper .dataTables_length {
+    margin-bottom: 15px !important;
+    display: inline-block !important;
+}
+
+/* Satır sayısı seçici içindeki select elementi */
+.dataTables_wrapper .dataTables_length select {
+    width: auto !important;
+    display: inline-block !important;
+    padding-right: 30px !important; /* Ok için daha fazla alan */
+    margin: 0 5px !important;
+    height: auto !important;
+    line-height: normal !important;
+}
+
+/* Satır sayısı seçici metni */
+.dataTables_wrapper .dataTables_length label {
+    display: flex !important;
+    align-items: center !important;
+    margin-bottom: 0 !important;
+    white-space: nowrap !important;
+}
+
+/* Satır sayısı seçici içindeki metinleri düzgün hizala */
+.dataTables_wrapper .dataTables_length span {
+    margin: 0 5px !important;
+}
+
+/* Select2 kullanılıyorsa */
+.dataTables_wrapper .dataTables_length .select2-container {
+    min-width: 80px !important;
+    margin: 0 5px !important;
+}
+
+.table-wrapper {
+    max-height: 550px; /* İstediğin yüksekliği burada belirleyebilirsin */
+    overflow-y: auto; /* Dikey kaydırma çubuğu ekler */
+    overflow-x: hidden;
+    margin-bottom: 20px; /* Alt kısımda biraz boşluk bırakır */
+}
+
+/* Tablo başlığını (thead) sabit tutmak istersen: */
+.table-wrapper .table thead {
+    position: sticky;
+    top: 0;
+    background-color: #fff; /* Başlık arka plan rengi */
+    z-index: 1;
+}

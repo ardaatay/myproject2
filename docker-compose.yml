@@ -1,0 +1,59 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: varlik-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-varlikenvanteri}
+      POSTGRES_USER: ${POSTGRES_USER:-varlik}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD .env dosyasinda tanimlanmalidir}
+      # Türkçe sıralama ve büyük/küçük harf davranışı için
+      LANG: tr_TR.UTF-8
+    volumes:
+      - varlik-pgdata:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-varlik} -d ${POSTGRES_DB:-varlikenvanteri}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: varlik-web
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__DefaultConnection: >-
+        Host=db;Port=5432;Database=${POSTGRES_DB:-varlikenvanteri};Username=${POSTGRES_USER:-varlik};Password=${POSTGRES_PASSWORD}
+      Veritabani__BaslangictaMigrateEt: "true"
+      Veritabani__BaslangictaGorunumleriUygula: "true"
+      Veritabani__BaslangicVerisiniKur: "true"
+      Veritabani__YoneticiKullaniciAdi: ${YONETICI_KULLANICI_ADI:-admin}
+      Veritabani__YoneticiSifresi: ${YONETICI_SIFRESI:-}
+      UygulamaAyarlari__UygulamaAdi: ${UYGULAMA_ADI:-Varlık Envanteri}
+      UygulamaAyarlari__Kultur: ${KULTUR:-tr-TR}
+      UygulamaAyarlari__OturumSuresiDk: ${OTURUM_SURESI_DK:-60}
+      # TLS ters vekil tarafindan sonlandirilir; uygulama yalnizca HTTP dinler.
+      HttpsYonlendirmesiAcik: "false"
+    ports:
+      - "${WEB_PORT:-8080}:8080"
+    volumes:
+      - varlik-appdata:/var/lib/varlik
+    healthcheck:
+      # Ilk acilista migration ve gorunumler uygulandigi icin start_period uzun tutulur.
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  varlik-appdata:
+  varlik-pgdata:

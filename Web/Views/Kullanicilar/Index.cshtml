@@ -1,0 +1,107 @@
+﻿@{
+	ViewData["Title"] = "Kullanıcılar";
+}
+
+<div class="container-fluid">
+	<h1 class="mt-4">Kullanıcı Listesi</h1>
+	<div class="card mb-4">
+		<div class="card-header">
+			<a asp-action="Create" class="btn btn-primary">Yeni Ekle</a>
+		</div>
+		<div class="card-body">
+			<div class="table-responsive">
+				<table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+					<thead>
+					<tr>
+						<th>İşlemler</th>
+						<th>Kullanıcı Adı</th>
+						<th>Birim</th>
+						<th>Durum</th>
+					</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+
+<form id="sifirlaFormu" method="post" asp-action="SifreSifirla" class="d-none">
+	@Html.AntiForgeryToken()
+	<input type="hidden" name="id" id="sifirlaKullaniciId"/>
+</form>
+
+@section Scripts {
+	<script>
+		$(document).ready(function () {
+			/* Define global variables for shared scripts */
+			const deleteUrlBase = '@Url.Action("Delete")';
+
+			const table = $('#dataTable').DataTable({
+				stateSave: true,
+				stateDuration: 60 * 60 * 24,
+				processing: true,
+				serverSide: true,
+				ajax: {
+					url: '@Url.Action("GetKullanicilar", "Kullanicilar")',
+					type: 'POST'
+				},
+				language: {
+					url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/tr.json'
+				},
+				columns: [
+					{
+						data: null,
+						orderable: false,
+						render: function (data, type, row) {
+							let buttons = '';
+							buttons += `<a href="Kullanicilar/Edit/${row.id}" class="btn btn-secondary btn-sm me-1" title="Güncelle"><i class="fas fa-info-circle"></i></a>`;
+							buttons += `<button class="btn btn-warning btn-sm me-1" onclick="sifreSifirla(${row.kullaniciId}, '${row.username}')" title="Şifre sıfırla"><i class="fas fa-key"></i></button>`;
+							buttons += `<button class="btn btn-danger btn-sm me-1" onclick="deleteRecord('${deleteUrlBase}/${row.id}')" title="Sil"><i class="fas fa-trash"></i></button>`;
+							return `<div class="btn-group">${buttons}</div>`;
+						}
+					},
+					{data: 'username'},
+					{data: 'birimAd'},
+					{data: 'durumStr'}
+				],
+				"bAutoWidth": false,
+				"ordering": true,
+			});
+		});
+
+		function sifreSifirla(kullaniciId, kullaniciAdi) {
+			Swal.fire({
+				title: 'Şifre sıfırlansın mı?',
+				html: `<b>${kullaniciAdi}</b> kullanıcısı için tek kullanımlık yeni bir şifre üretilecek.`
+					+ '<br><br>Kullanıcının açık oturumları kapanacak ve ilk girişinde'
+					+ ' şifresini değiştirmesi istenecek.',
+				icon: 'warning',
+				showCancelButton: true,
+				confirmButtonColor: '#3085d6',
+				cancelButtonColor: '#d33',
+				confirmButtonText: 'Evet, sıfırla',
+				cancelButtonText: 'İptal'
+			}).then((result) => {
+				if (result.isConfirmed) {
+					document.getElementById('sifirlaKullaniciId').value = kullaniciId;
+					document.getElementById('sifirlaFormu').submit();
+				}
+			});
+		}
+	</script>
+
+	@if (TempData["GeciciSifre"] != null)
+	{
+		<script>
+			// Şifre yalnızca burada, bir kez gösterilir; hiçbir yerde saklanmaz.
+			Swal.fire({
+				title: 'Geçici şifre oluşturuldu',
+				html: '<p>Bu şifre yalnızca bir kez gösterilir. Kullanıcıya güvenli bir'
+					+ ' kanaldan iletin.</p>'
+					+ '<code style="font-size:1.1rem;user-select:all">@TempData["GeciciSifre"]</code>',
+				icon: 'success',
+				confirmButtonText: 'Kopyaladım'
+			});
+		</script>
+	}
+} 

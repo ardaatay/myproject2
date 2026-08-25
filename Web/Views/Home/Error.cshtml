@@ -1,0 +1,95 @@
+﻿@model ErrorViewModel
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostingEnvironment
+
+@{
+    ViewData["Title"] = "Hata";
+    var isDevelopment = HostingEnvironment.IsDevelopment();
+    
+    // Status koduna göre kullanıcı dostu hata mesajları
+    var friendlyErrorMessages = new Dictionary<int, string>
+    {
+        { 400, "Geçersiz istek. Lütfen tekrar deneyiniz." },
+        { 401, "Bu işlemi gerçekleştirmek için yetkiniz bulunmamaktadır." },
+        { 403, "Bu sayfaya erişim izniniz bulunmamaktadır." },
+        { 404, "Aradığınız sayfa bulunamadı." },
+        { 500, "Sunucu hatası. Lütfen daha sonra tekrar deneyiniz." },
+        { 0, "Beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyiniz." }
+    };
+    
+    // Status koduna göre ikon ve başlık
+    var errorIcons = new Dictionary<int, string>
+    {
+        { 400, "exclamation-triangle" },
+        { 401, "lock" },
+        { 403, "ban" },
+        { 404, "search" },
+        { 500, "server" },
+        { 0, "exclamation-circle" }
+    };
+    
+    var errorTitles = new Dictionary<int, string>
+    {
+        { 400, "Geçersiz İstek" },
+        { 401, "Yetkisiz Erişim" },
+        { 403, "Erişim Engellendi" },
+        { 404, "Sayfa Bulunamadı" },
+        { 500, "Sunucu Hatası" },
+        { 0, "Beklenmeyen Hata" }
+    };
+    
+    var statusCode = Model.StatusCode > 0 ? Model.StatusCode : 0;
+    var errorIcon = errorIcons.TryGetValue(key: statusCode, out var ıcon) ? ıcon : errorIcons[0];
+    var errorTitle = errorTitles.TryGetValue(key: statusCode, value: out var title) ? title : errorTitles[0];
+    var friendlyMessage = friendlyErrorMessages.TryGetValue(key: statusCode, value: out var message) ? message : friendlyErrorMessages[0];
+}
+
+<div class="card shadow-sm">
+    <div class="card-header d-flex align-items-center">
+        <i class="fas fa-@errorIcon me-2 text-danger"></i>
+        <h5 class="mb-0">@errorTitle</h5>
+    </div>
+    <div class="card-body">
+        <div class="text-center mb-4">
+            <div class="display-1 text-danger mb-3">
+                <i class="fas fa-@errorIcon"></i>
+            </div>
+            <h4 class="text-danger">@errorTitle</h4>
+            <p class="lead">@friendlyMessage</p>
+        </div>
+        
+        @if (isDevelopment)
+        {
+            <div class="alert alert-warning" role="alert">
+                <h5 class="alert-heading"><i class="fas fa-code me-2"></i>Geliştirici Bilgileri</h5>
+                <hr>
+                <p><strong>Hata Kodu:</strong> @Model.StatusCode</p>
+                <p><strong>İstek ID:</strong> @Model.RequestId</p>
+                <p><strong>Hata Mesajı:</strong> @Model.ErrorMessage</p>
+                
+                @if (!string.IsNullOrEmpty(Model.StackTrace))
+                {
+                    <div class="mt-3">
+                        <p><strong>Stack Trace:</strong></p>
+                        <pre class="bg-light p-3 rounded"><code>@Model.StackTrace</code></pre>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center mt-4">
+                <p>Hata referans numarası: <code>@Model.RequestId</code></p>
+                <p>Bu bilgiyi teknik destek ekibine iletebilirsiniz.</p>
+            </div>
+        }
+        
+        <div class="text-center mt-4">
+            <a href="/" class="btn btn-primary">
+                <i class="fas fa-home me-2"></i>Ana Sayfaya Dön
+            </a>
+            <button onclick="window.history.back()" class="btn btn-secondary ms-2">
+                <i class="fas fa-arrow-left me-2"></i>Geri Dön
+            </button>
+        </div>
+    </div>
+</div>

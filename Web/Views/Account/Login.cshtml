@@ -1,0 +1,46 @@
+﻿@model Dto.Kullanici.GirisDto
+
+@{
+    ViewData["Title"] = "Giriş";
+    Layout = "_LayoutGiris";
+}
+
+<form asp-action="Login" method="post" autocomplete="on">
+    <input type="hidden" asp-for="ReturnUrl"/>
+
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 px-3 small" role="alert"></div>
+
+    <div class="mb-3">
+        <label asp-for="Username" class="form-label">Kullanıcı adı</label>
+        <input asp-for="Username" class="form-control" autocomplete="username" autofocus/>
+        <span asp-validation-for="Username" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-4">
+        <label asp-for="Sifre" class="form-label">Şifre</label>
+        <div class="input-group">
+            <input asp-for="Sifre" type="password" class="form-control" autocomplete="current-password" id="sifreAlani"/>
+            <button class="btn btn-outline-secondary" type="button" id="sifreGoster"
+                    aria-label="Şifreyi göster">
+                <i class="bi bi-eye" id="sifreGosterIkon"></i>
+            </button>
+        </div>
+        <span asp-validation-for="Sifre" class="text-danger small"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100">Giriş yap</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial"/>
+    <script>
+        document.getElementById('sifreGoster').addEventListener('click', function () {
+            const alan = document.getElementById('sifreAlani');
+            const ikon = document.getElementById('sifreGosterIkon');
+            const gizli = alan.type === 'password';
+            alan.type = gizli ? 'text' : 'password';
+            ikon.className = gizli ? 'bi bi-eye-slash' : 'bi bi-eye';
+            this.setAttribute('aria-label', gizli ? 'Şifreyi gizle' : 'Şifreyi göster');
+        });
+    </script>
+}

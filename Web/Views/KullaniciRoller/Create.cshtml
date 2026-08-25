@@ -1,0 +1,41 @@
+﻿@model Dto.KullaniciRol.CreateKullaniciRolDto
+
+@{
+	ViewData["Title"] = "Kullanıcı Roller";
+}
+
+<div class="container-fluid">
+	<h1 class="mt-4">Yeni Kullanıcı Rol Ekle</h1>
+	<div class="card mb-4">
+		<div class="card-body">
+			<form asp-action="Create">
+				<div class="row">
+							<div class="form-group mt-1">
+						<label asp-for="KullaniciId">Kullanıcı</label>
+						<select asp-for="KullaniciId" asp-items="ViewBag.Kullanicilar" class="form-select" id="birimSelect">
+							<option value="">Seçiniz</option>
+						</select>
+						<span asp-validation-for="KullaniciId" class="text-danger"></span>
+					</div>
+							<div class="form-group mt-1">
+						<label asp-for="RolId">Rol</label>
+						<select asp-for="RolId" asp-items="ViewBag.Roller" class="form-select" id="birimSelect">
+							<option value="">Seçiniz</option>
+						</select>
+						<span asp-validation-for="RolId" class="text-danger"></span>
+					</div>
+				</div>
+						<div class="form-group mt-1">
+					<input type="submit" value="Kaydet" class="btn btn-primary" />
+					<a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+} 

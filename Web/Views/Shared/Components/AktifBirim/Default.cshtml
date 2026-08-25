@@ -1,0 +1,21 @@
+﻿@model Web.ViewModels.AktifBirimViewModel
+
+@{
+    Layout = null;
+}
+
+@if (!string.IsNullOrEmpty(Model.AktifBirimAdi))
+{
+    <li class="nav-item">
+        <span class="nav-link text-success fw-semibold">@Model.AktifBirimAdi</span>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-primary" asp-controller="Account" asp-action="BirimSec">Birim Değiştir</a>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+        <a class="nav-link text-danger fw-bold" asp-controller="Account" asp-action="BirimSec">Birim Seçiniz!</a>
+    </li>
+}

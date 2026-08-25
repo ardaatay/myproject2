@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  derle:
+    name: Derleme ve testler
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: .NET kurulumu
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Paketleri geri yükle
+        run: dotnet restore VarlikEnvanteri.sln
+
+      - name: Derle
+        run: dotnet build VarlikEnvanteri.sln --configuration Release --no-restore
+
+      # Test projesi eklendiğinde bu adım kendiliğinden çalışır.
+      - name: Testleri çalıştır
+        run: dotnet test VarlikEnvanteri.sln --configuration Release --no-build --verbosity normal
+
+  konteyner:
+    name: Konteyner imajı
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: İmajı derle
+        run: docker build -t varlikenvanteri:${{ github.sha }} .

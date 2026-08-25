@@ -1,0 +1,28 @@
+@model Dto.YedeklemeSorumlusu.CreateYedeklemeSorumlusuDto
+
+@{
+    ViewData["Title"] = "Yedekleme Sorumlusu";
+}
+
+<div class="container-fluid">
+    <h1 class="mt-4">Yeni Yedekleme Sorumlusu Ekle</h1>
+    <div class="card mb-4">
+        <div class="card-body">
+            <form asp-action="Create">
+                <div class="form-group">
+                    <label asp-for="Ad" class="control-label">Ad</label>
+                    <input asp-for="Ad" class="form-control" />
+                    <span asp-validation-for="Ad" class="text-danger"></span>
+                </div>
+                		<div class="form-group mt-1">
+                    <input type="submit" value="Kaydet" class="btn btn-primary" />
+                    <a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 

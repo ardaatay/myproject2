@@ -1,0 +1,62 @@
+@model Dto.EpostaTalep.UpdateEpostaTalepDto
+
+@{
+	ViewData["Title"] = "Eposta Talepleri";
+}
+
+<div class="container-fluid">
+	<div class="card mb-4">
+		<div class="card-body">
+			<div class="row">
+				<div class="col-md-6">
+					<div class="form-group mt-1">
+						<label asp-for="KurumId">Kurum</label>
+						<div class="d-flex align-items-center">
+							<select asp-for="KurumId" id="kategoriSelect"
+							        asp-items="ViewBag.Kurumlar" class="form-select">
+								<option value="">Seçiniz</option>
+							</select>
+						</div>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="UcuncuTaraf">Üçüncü Taraf Firma veya Kişi</label>
+						<input asp-for="UcuncuTaraf" class="form-control"/>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="TalepEdilen">Talep Edilen E-Posta Hesabı</label>
+						<input asp-for="TalepEdilen" class="form-control"/>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="TalepEden">Talep Eden Kullanıcı</label>
+						<input asp-for="TalepEden" class="form-control"/>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="TalepNedeni">Talep Eden Birim</label>
+						<input asp-for="TalepNedeni" class="form-control"/>
+					</div>
+					<div class="form-group mt-1">
+						<label asp-for="TalepSuresi">Talep Süresi</label>
+						<input asp-for="TalepSuresi" class="form-control"/>
+					</div>
+
+					<!-- Dosya indirme bölümü -->
+					<div class="form-group mt-3">
+						<label>İlgili Dosya</label>
+						<div>
+							@if (!string.IsNullOrWhiteSpace(Model.DosyaYolu))
+							{
+								<a class="btn btn-info"
+								   href="@Url.Action("Download", "EpostaTalepleri", new { id = Model.Id })"><i
+										class="fas fa-file-download"></i> İndir</a>
+							}
+							else
+							{
+								<span>Dosya yok</span>
+							}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,106 @@
+﻿@model List<Dto.Kullanici.KullaniciListeDto>
+
+@{
+    ViewData["Title"] = "Kullanıcı Roller";
+}
+
+<div class="container-fluid">
+    <h1 class="mt-4">Kullanıcı Rol Listesi</h1>
+    
+    <!-- Güvenlik Modu Checkbox'ı -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="guvenlikModu" onchange="toggleGuvenlikModu()">
+                <label class="form-check-label" for="guvenlikModu">
+                    <strong>Güvenlik Modu</strong> - Admin dışındaki tüm rollerin veri işlemlerini kısıtla
+                </label>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-body">
+            <table id="dataTable" class="table table-bordered">
+                <thead>
+                <tr>
+                    <th>Kullanıcı Adı</th>
+                    <th>Roller</th>
+                    <th>İşlemler</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var kullanici in Model)
+                {
+                    <tr>
+                        <td>@kullanici.KullaniciAdi</td>
+                        <td>@kullanici.RolListesi</td>
+                        <td>
+                            <a asp-action="RolAta" asp-route-id="@kullanici.Id" class="btn btn-primary">Rol Ata</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleGuvenlikModu() {
+            const isChecked = document.getElementById('guvenlikModu').checked;
+            
+            $.ajax({
+                url: '@Url.Action("GuvenlikModuAyarla")',
+                type: 'POST',
+                data: { aktif: isChecked },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            title: isChecked ? 'Güvenlik Modu Aktif!' : 'Güvenlik Modu Pasif!',
+                            text: isChecked ? 'Admin dışındaki roller artık kısıtlı.' : 'Tüm roller normal yetkilerine sahip.',
+                            icon: 'success',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Hata!',
+                            text: 'Güvenlik modu ayarlanırken bir hata oluştu.',
+                            icon: 'error',
+                            confirmButtonText: 'Tamam'
+                        });
+                        // Checkbox'ı eski haline döndür
+                        document.getElementById('guvenlikModu').checked = !isChecked;
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        title: 'Hata!',
+                        text: 'Sunucu ile bağlantı kurulamadı.',
+                        icon: 'error',
+                        confirmButtonText: 'Tamam'
+                    });
+                    // Checkbox'ı eski haline döndür
+                    document.getElementById('guvenlikModu').checked = !isChecked;
+                }
+            });
+        }
+
+
+
+        $(document).ready(function () {
+            $('#dataTable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/tr.json'
+                }
+            });
+            
+            // Sayfa yüklendiğinde mevcut güvenlik modu durumunu al
+            $.get('@Url.Action("GuvenlikModuDurumu")', function(data) {
+                document.getElementById('guvenlikModu').checked = data.aktif;
+            });
+        });
+    </script>
+}
