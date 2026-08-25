@@ -1,46 +1,53 @@
-﻿<!DOCTYPE html>
-<html lang="@UygulamaAyarlariOptions.Value.Kultur">
+@{
+    var ayar = UygulamaAyarlariOptions.Value;
+    var genis = ViewData["GirisGenisMi"] as bool? ?? false;
+}
+
+<!DOCTYPE html>
+<html lang="@ayar.Kultur">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>@ViewData["Title"] - @UygulamaAyarlariOptions.Value.UygulamaAdi</title>
-    <link rel="icon" type="image/png" href="@UygulamaAyarlariOptions.Value.LogoYolu"/>
+    <title>@ViewData["Title"] - @ayar.UygulamaAdi</title>
+    <link rel="icon" href="@ayar.LogoYolu"/>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"/>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        .giris-sayfasi {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem 1rem;
-            background: #f2f4f7;
-        }
-        .giris-kart {
-            width: 100%;
-            max-width: 26rem;
-            border: 1px solid #dfe3e8;
-            border-radius: .5rem;
-            background: #fff;
-            padding: 2rem;
-        }
-        .giris-baslik {
-            text-align: center;
-            margin-bottom: 1.75rem;
-        }
-        .giris-baslik img { height: 56px; margin-bottom: .75rem; }
-        .giris-baslik h1 { font-size: 1.25rem; font-weight: 600; margin: 0; }
-    </style>
 </head>
 <body>
-<main class="giris-sayfasi">
-    <div class="giris-kart">
-        <div class="giris-baslik">
-            <img src="@UygulamaAyarlariOptions.Value.LogoYolu" alt="@UygulamaAyarlariOptions.Value.UygulamaAdi"/>
-            <h1>@UygulamaAyarlariOptions.Value.UygulamaAdi</h1>
+
+<main class="ve-giris">
+
+    <aside class="ve-giris-marka">
+        <span class="ve-giris-desen" aria-hidden="true"></span>
+
+        <div style="display: flex; align-items: center; gap: 12px">
+            <img src="@ayar.LogoYolu" alt="" width="38" height="38" style="border-radius: 9px"/>
+            <span style="font-size: 18px; font-weight: 600; letter-spacing: -.01em">@ayar.UygulamaAdi</span>
         </div>
-        @RenderBody()
+
+        <h1 class="ve-giris-slogan">Kurumun bilgi varlıkları tek yerde.</h1>
+        <p class="ve-giris-aciklama">
+            Ağ ve sistemlerden basılı belgelere kadar her varlığı sahibi, konumu ve
+            gizlilik sınıfıyla birlikte kayıt altında tutun.
+        </p>
+
+        <div style="margin-top: 44px; padding-top: 28px; border-top: 1px solid rgba(255,255,255,.16); display: flex; flex-wrap: wrap; gap: 10px 20px; font-size: 13px; color: var(--ve-aksan-200)">
+            <span><i class="bi bi-hdd-network"></i> Ağ ve sistemler</span>
+            <span><i class="bi bi-window-stack"></i> Uygulamalar</span>
+            <span><i class="bi bi-file-earmark-text"></i> Bilgi varlıkları</span>
+            <span><i class="bi bi-shield-lock"></i> Kriptografi envanteri</span>
+        </div>
+    </aside>
+
+    <div class="ve-giris-form">
+        <div class="ve-giris-kutu" style="@(genis ? "max-width: 560px" : "")">
+            <div class="ve-giris-mobil-marka">
+                <img src="@ayar.LogoYolu" alt="" width="34" height="34"/>
+                <span>@ayar.UygulamaAdi</span>
+            </div>
+            @RenderBody()
+        </div>
     </div>
 </main>
 

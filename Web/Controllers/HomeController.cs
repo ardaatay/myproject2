@@ -33,9 +33,19 @@ public class HomeController(
         ViewBag.FizikselMekanlarSayisi = context.FizikselMekanlar.Count(x => (x.SilinsinMi == false || x.SilinsinMi == null));
         ViewBag.PersonelSayisi = context.Personeller.Count(x => (x.SilinsinMi == false || x.SilinsinMi == null));
 
-        // Son eklenen varlıkları getir (örnek olarak)
-        // Bu kısmı kendi veri modelinize göre düzenlemeniz gerekecek
+        // Son eklenen varlıklar listesi her kategoriden yalnızca son 3 kaydı
+        // döndürür; bu ayın toplamı o listeden sayılamaz, ayrıca hesaplanır.
         ViewBag.SonEklenenVarliklar = await GetSonEklenenVarliklar();
+
+        var ayBasi = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+
+        ViewBag.BuAyEklenenSayisi =
+            context.AgveSistemler.Count(x => x.EnvantereGirisTarihi >= ayBasi && (x.SilinsinMi == false || x.SilinsinMi == null))
+            + context.Uygulamalar.Count(x => x.EnvantereGirisTarihi >= ayBasi && (x.SilinsinMi == false || x.SilinsinMi == null))
+            + context.TasinabilirCihazveOrtamlar.Count(x => x.EnvantereGirisTarihi >= ayBasi && (x.SilinsinMi == false || x.SilinsinMi == null))
+            + context.IoTCihazlari.Count(x => x.EnvantereGirisTarihi >= ayBasi && (x.SilinsinMi == false || x.SilinsinMi == null))
+            + context.FizikselMekanlar.Count(x => x.EnvantereGirisTarihi >= ayBasi && (x.SilinsinMi == false || x.SilinsinMi == null))
+            + context.Personeller.Count(x => x.EnvantereGirisTarihi >= ayBasi && (x.SilinsinMi == false || x.SilinsinMi == null));
 
         ViewBag.AktifKullaniciSayisi = istatistikService.GetAktifKullaniciSayisi();
         ViewBag.ToplamGirisSayisi = istatistikService.GetToplamGirisSayisi();

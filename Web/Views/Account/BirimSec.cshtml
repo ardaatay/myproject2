@@ -1,19 +1,53 @@
-﻿@model List<Dto.KullaniciBirim.KullaniciBirimDto>
+@model List<Dto.KullaniciBirim.KullaniciBirimDto>
 
 @{
-    ViewBag.Title = "Birim Seç";
+    ViewData["Title"] = "Birim Seç";
+    ViewData["GirisGenisMi"] = true;
+    Layout = "_LayoutGiris";
 }
 
-<form asp-action="BirimSec" method="post">
-    <div class="mb-3">
-        <label for="id" class="form-label">Birim</label>
-        <select id="id" name="id" class="form-select" required>
-            <option value="">Seçiniz</option>
-            @foreach (var b in Model)
-            {
-                <option value="@b.Id">@b.BirimAd</option>
-            }
-        </select>
+<div style="text-align: center; margin-bottom: 26px">
+    <h1 style="font-size: 24px; font-weight: 600; letter-spacing: -.02em; margin-bottom: 7px">
+        Hangi birim adına çalışacaksınız?
+    </h1>
+    <p style="margin: 0; color: var(--ve-metin-3); font-size: 13.5px; line-height: 1.55">
+        Göreceğiniz kayıtlar ve yapabileceğiniz işlemler seçtiğiniz birime göre belirlenir.
+        Üst çubuktan istediğiniz zaman değiştirebilirsiniz.
+    </p>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-warning" role="alert">
+        Hiçbir birime yetkiniz tanımlanmamış. Sistem yöneticinizden yetki isteyin.
     </div>
-    <button type="submit" class="btn btn-primary">Seç</button>
-</form>
+    <a asp-action="Logout" class="btn btn-secondary w-100 mt-3">Çıkış yap</a>
+}
+else
+{
+    <form asp-action="BirimSec" method="post">
+        <div style="border: 1px solid var(--ve-cizgi); border-radius: var(--ve-r-lg); background: var(--ve-yuzey); overflow: hidden">
+            <div style="max-height: 340px; overflow-y: auto; padding: 6px">
+                @foreach (var b in Model)
+                {
+                    <label class="ve-birim-secim">
+                        <input type="radio" name="id" value="@b.Id" class="form-check-input" required/>
+                        <i class="bi bi-diagram-2" style="color: var(--ve-metin-4)"></i>
+                        <span style="flex-grow: 1">@b.BirimAd</span>
+                    </label>
+                }
+            </div>
+
+            <div style="padding: 14px 16px; border-top: 1px solid var(--ve-cizgi); background: var(--ve-yuzey-2); display: flex; align-items: center; gap: 14px">
+                <span style="flex-grow: 1; font-size: 13px; color: var(--ve-metin-3)">
+                    @Model.Count birim için yetkiniz var.
+                </span>
+                <button type="submit" class="btn btn-primary">Devam et</button>
+            </div>
+        </div>
+    </form>
+
+    <p style="margin: 18px 0 0; text-align: center; font-size: 12.5px; color: var(--ve-metin-4)">
+        Listede olması gereken bir birim görünmüyorsa yöneticinizden yetki isteyin.
+    </p>
+}

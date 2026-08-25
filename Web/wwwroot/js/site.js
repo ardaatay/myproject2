@@ -220,3 +220,85 @@ function deleteDatabaseRecord(url) {
 $(function () {
     $('[data-bs-toggle="tooltip"]').tooltip();
 });
+/* ==========================================================================
+   Uygulama çatısı — kenar menü ve sayfa bildirimleri
+   ========================================================================== */
+
+(function () {
+    'use strict';
+
+    var govde = document.body;
+    var acKapa = document.getElementById('menuAcKapa');
+    var ortu = document.getElementById('menuOrtu');
+    var menu = document.getElementById('kenarMenu');
+
+    function menuKapat() {
+        govde.classList.remove('ve-menu-acik');
+        if (acKapa) acKapa.setAttribute('aria-expanded', 'false');
+    }
+
+    function menuAc() {
+        govde.classList.add('ve-menu-acik');
+        if (acKapa) acKapa.setAttribute('aria-expanded', 'true');
+    }
+
+    if (acKapa) {
+        acKapa.addEventListener('click', function () {
+            if (govde.classList.contains('ve-menu-acik')) {
+                menuKapat();
+            } else {
+                menuAc();
+            }
+        });
+    }
+
+    if (ortu) ortu.addEventListener('click', menuKapat);
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') menuKapat();
+    });
+
+    // Dar ekranda bir menü bağlantısına tıklanınca çekmece kapanır.
+    if (menu) {
+        menu.addEventListener('click', function (e) {
+            if (e.target.closest('.ve-menu-baglanti') && window.innerWidth < 992) {
+                menuKapat();
+            }
+        });
+    }
+
+    // Geniş ekrana dönülünce çekmece durumu sıfırlanır.
+    window.addEventListener('resize', function () {
+        if (window.innerWidth >= 992) menuKapat();
+    });
+
+    // Sunucudan gelen bildirimler. Gizli alanlardan okunur; böylece bu kod
+    // jQuery ve SweetAlert yüklendikten sonra çalışır.
+    function deger(id) {
+        var el = document.getElementById(id);
+        return el && el.value ? el.value.trim() : '';
+    }
+
+    if (typeof Swal !== 'undefined') {
+        var basari = deger('successMessage');
+        var hata = deger('errorMessage');
+        var kod = deger('errorStatusCode');
+
+        if (basari) {
+            Swal.fire({
+                title: 'Başarılı',
+                text: basari,
+                icon: 'success',
+                timer: 2200,
+                showConfirmButton: false
+            });
+        } else if (hata) {
+            Swal.fire({
+                title: 'Hata' + (kod ? ' (' + kod + ')' : ''),
+                text: hata,
+                icon: 'error',
+                confirmButtonText: 'Tamam'
+            });
+        }
+    }
+})();

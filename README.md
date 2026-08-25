@@ -72,7 +72,7 @@ Tüm ayarlar ortam değişkeniyle geçersiz kılınabilir (`__` iç içe anahtar
 | `Veritabani__YoneticiKullaniciAdi` | `admin` | Tohumlanacak yönetici hesabının adı |
 | `Veritabani__YoneticiSifresi` | — | Boşsa rastgele üretilip günlüğe yazılır |
 | `UygulamaAyarlari__UygulamaAdi` | `Varlık Envanteri` | Tarayıcı başlığı ve üst çubuktaki ad |
-| `UygulamaAyarlari__LogoYolu` | `/img/logo.png` | Logo ve favicon yolu (`wwwroot` köküne göre) |
+| `UygulamaAyarlari__LogoYolu` | `/img/logo.svg` | Logo ve favicon yolu (`wwwroot` köküne göre) |
 | `UygulamaAyarlari__Kultur` | `tr-TR` | Sayı, tarih ve harf büyütme kuralları |
 | `UygulamaAyarlari__TarihFormati` | `dd.MM.yyyy` | Kısa tarih biçimi |
 | `UygulamaAyarlari__OturumSuresiDk` | `60` | Oturum ve kimlik çerezi süresi |
@@ -80,7 +80,7 @@ Tüm ayarlar ortam değişkeniyle geçersiz kılınabilir (`__` iç içe anahtar
 | `UygulamaAyarlari__SifrePolitikasi__*` | — | Uzunluk, karakter sınıfları, kilit eşiği ve süresi |
 | `HttpsYonlendirmesiAcik` | `true` | TLS'i ters vekil sonlandırıyorsa `false` yapın |
 
-Kurumsal görünümü değiştirmek için `Web/wwwroot/img/logo.png` dosyasını
+Kurumsal görünümü değiştirmek için `Web/wwwroot/img/logo.svg` dosyasını
 değiştirin veya `UygulamaAyarlari__LogoYolu` ile başka bir dosyayı gösterin.
 
 ### Çok kiracılılık

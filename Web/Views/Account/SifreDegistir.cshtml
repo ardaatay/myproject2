@@ -1,17 +1,32 @@
-﻿@model Dto.Kullanici.SifreDegistirDto
+@model Dto.Kullanici.SifreDegistirDto
 
 @{
     ViewData["Title"] = "Şifre Değiştir";
     Layout = "_LayoutGiris";
+
+    // Kural metni yapılandırmadan üretilir; politika değişince bu satır da değişir.
+    var politika = UygulamaAyarlariOptions.Value.SifrePolitikasi;
+    var kosullar = new List<string>();
+    if (politika.BuyukHarfGerekli) kosullar.Add("büyük harf");
+    if (politika.KucukHarfGerekli) kosullar.Add("küçük harf");
+    if (politika.RakamGerekli) kosullar.Add("rakam");
+    if (politika.OzelKarakterGerekli) kosullar.Add("özel karakter");
 }
+
+<h1 style="font-size: 25px; font-weight: 600; letter-spacing: -.02em; margin-bottom: 6px">Şifrenizi belirleyin</h1>
+<p style="color: var(--ve-metin-3); font-size: 14px; margin-bottom: 26px">
+    Yeni şifreniz en az @politika.EnAzUzunluk karakter olmalı@(kosullar.Count > 0
+        ? "; " + string.Join(", ", kosullar) + " içermelidir."
+        : ".")
+</p>
 
 @if (TempData["Uyari"] != null)
 {
-    <div class="alert alert-warning py-2 px-3 small" role="alert">@TempData["Uyari"]</div>
+    <div class="alert alert-warning" role="alert">@TempData["Uyari"]</div>
 }
 
 <form asp-action="SifreDegistir" method="post" autocomplete="off">
-    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 px-3 small" role="alert"></div>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
     <div class="mb-3">
         <label asp-for="MevcutSifre" class="form-label"></label>
@@ -31,7 +46,7 @@
         <span asp-validation-for="YeniSifreTekrar" class="text-danger small"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary w-100">Şifreyi güncelle</button>
+    <button type="submit" class="btn btn-primary">Şifreyi güncelle</button>
     <a asp-controller="Home" asp-action="Index" class="btn btn-link w-100 mt-2">Vazgeç</a>
 </form>
 

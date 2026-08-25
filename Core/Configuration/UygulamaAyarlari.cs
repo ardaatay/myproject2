@@ -15,7 +15,7 @@ public class UygulamaAyarlari
     public string UygulamaAdi { get; set; } = "Varlık Envanteri";
 
     /// <summary>wwwroot köküne göre logo yolu. Favicon olarak da kullanılır.</summary>
-    public string LogoYolu { get; set; } = "/img/logo.png";
+    public string LogoYolu { get; set; } = "/img/logo.svg";
 
     /// <summary>Sayı, tarih ve harf büyütme kurallarını belirleyen kültür.</summary>
     public string Kultur { get; set; } = "tr-TR";

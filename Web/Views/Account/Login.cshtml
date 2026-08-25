@@ -1,14 +1,17 @@
-﻿@model Dto.Kullanici.GirisDto
+@model Dto.Kullanici.GirisDto
 
 @{
     ViewData["Title"] = "Giriş";
     Layout = "_LayoutGiris";
 }
 
+<h1 style="font-size: 25px; font-weight: 600; letter-spacing: -.02em; margin-bottom: 6px">Giriş yapın</h1>
+<p style="color: var(--ve-metin-3); font-size: 14px; margin-bottom: 28px">Kurumsal kullanıcı adınızla devam edin.</p>
+
 <form asp-action="Login" method="post" autocomplete="on">
     <input type="hidden" asp-for="ReturnUrl"/>
 
-    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 px-3 small" role="alert"></div>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
     <div class="mb-3">
         <label asp-for="Username" class="form-label">Kullanıcı adı</label>
@@ -18,18 +21,26 @@
 
     <div class="mb-4">
         <label asp-for="Sifre" class="form-label">Şifre</label>
-        <div class="input-group">
-            <input asp-for="Sifre" type="password" class="form-control" autocomplete="current-password" id="sifreAlani"/>
-            <button class="btn btn-outline-secondary" type="button" id="sifreGoster"
-                    aria-label="Şifreyi göster">
+        <div style="position: relative">
+            <input asp-for="Sifre" type="password" class="form-control" autocomplete="current-password"
+                   id="sifreAlani" style="padding-right: 44px"/>
+            <button class="btn-icon" type="button" id="sifreGoster" aria-label="Şifreyi göster"
+                    style="position: absolute; right: 5px; top: 5px">
                 <i class="bi bi-eye" id="sifreGosterIkon"></i>
             </button>
         </div>
         <span asp-validation-for="Sifre" class="text-danger small"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary w-100">Giriş yap</button>
+    <button type="submit" class="btn btn-primary">Giriş yap</button>
 </form>
+
+<div style="margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--ve-yuzey-3)">
+    <p style="margin: 0; font-size: 12.5px; color: var(--ve-metin-3); line-height: 1.6">
+        Hesabınız yoksa birim bilgi güvenliği sorumlunuza başvurun.
+        Sisteme yapılan tüm girişler kayıt altına alınır.
+    </p>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial"/>

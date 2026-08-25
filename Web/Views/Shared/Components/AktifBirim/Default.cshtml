@@ -1,4 +1,4 @@
-﻿@model Web.ViewModels.AktifBirimViewModel
+@model Web.ViewModels.AktifBirimViewModel
 
 @{
     Layout = null;
@@ -6,16 +6,18 @@
 
 @if (!string.IsNullOrEmpty(Model.AktifBirimAdi))
 {
-    <li class="nav-item">
-        <span class="nav-link text-success fw-semibold">@Model.AktifBirimAdi</span>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link text-primary" asp-controller="Account" asp-action="BirimSec">Birim Değiştir</a>
-    </li>
+    <a class="ve-cip" asp-controller="Account" asp-action="BirimSec"
+       title="Aktif birim: @Model.AktifBirimAdi — değiştirmek için tıklayın">
+        <i class="bi bi-diagram-2" style="color: var(--ve-metin-3)"></i>
+        <span class="ve-cip-etiket">Birim</span>
+        <span class="ve-cip-ad">@Model.AktifBirimAdi</span>
+        <i class="bi bi-arrow-left-right" style="font-size: 12px; color: var(--ve-metin-4)"></i>
+    </a>
 }
 else
 {
-    <li class="nav-item">
-        <a class="nav-link text-danger fw-bold" asp-controller="Account" asp-action="BirimSec">Birim Seçiniz!</a>
-    </li>
+    <a class="ve-cip ve-cip--uyari" asp-controller="Account" asp-action="BirimSec">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span>Birim seçiniz</span>
+    </a>
 }

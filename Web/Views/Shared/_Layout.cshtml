@@ -1,220 +1,246 @@
-﻿<!DOCTYPE html>
-<html lang="@UygulamaAyarlariOptions.Value.Kultur">
+@{
+    var ayar = UygulamaAyarlariOptions.Value;
+
+    var yTeknik = await AuthorizationService.YetkiliMi(User, Yetkiler.TeknikVarlikListele);
+    var yBilgi = await AuthorizationService.YetkiliMi(User, Yetkiler.BilgiVarlikListele);
+    var yYonet = await AuthorizationService.YetkiliMi(User, Yetkiler.SistemYonet);
+
+    var aktifDenetleyici = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+
+    // Kenar menü. Her öge: (görünen ad, denetleyici, ikon).
+    var teknikOgeler = new[]
+    {
+        ("Ağ ve Sistemler", "AgveSistemler", "bi-hdd-network"),
+        ("Uygulamalar", "Uygulamalar", "bi-window-stack"),
+        ("Taşınabilir Cihaz ve Ortamlar", "TasinabilirCihazveOrtamlar", "bi-laptop"),
+        ("IoT Cihazları", "IoTCihazlari", "bi-cpu"),
+        ("Fiziksel Mekanlar", "FizikselMekanlar", "bi-building"),
+        ("Personel", "Personeller", "bi-people"),
+        ("Kriptografi Envanteri", "KriptografiEnvanterleri", "bi-shield-lock")
+    };
+
+    var bilgiOgeler = new[]
+    {
+        ("Basılı Bilgiler", "BasiliBilgiler", "bi-printer"),
+        ("Elektronik Bilgiler", "ElektronikBilgiler", "bi-file-earmark-text"),
+        ("Veritabanları", "Veritabanlari", "bi-database"),
+        ("Süreçler", "Surecler", "bi-diagram-3"),
+        ("E-posta Talepleri", "EpostaTalepleri", "bi-envelope")
+    };
+
+    var yonetimOgeler = new[]
+    {
+        ("Raporlar", "Raporlama", "bi-bar-chart"),
+        ("Birimler", "Birimler", "bi-diagram-2"),
+        ("Kullanıcılar", "Kullanicilar", "bi-person"),
+        ("Roller", "Roller", "bi-person-badge"),
+        ("Kullanıcı Rolleri", "KullaniciRoller", "bi-person-check"),
+        ("Kurumlar", "Kurumlar", "bi-buildings")
+    };
+
+    var tanimOgeler = new[]
+    {
+        ("Anahtar Sorumluları", "AnahtarSorumlulari", "bi-key"),
+        ("Bağımlı Varlıklar", "BagimliVarliklar", "bi-link-45deg"),
+        ("Bilgi Sınıfları", "BilgiSiniflari", "bi-journal-bookmark"),
+        ("Bütünlükler", "Butunlukler", "bi-check-circle"),
+        ("Destek Durumları", "DestekDurumlari", "bi-headset"),
+        ("Durumlar", "Durumlar", "bi-toggle-on"),
+        ("Erişilebilirlikler", "Erisilebilirlikler", "bi-hand-index"),
+        ("Etkilenen Kişi Sayıları", "EtkilenenKisiSayilari", "bi-people-fill"),
+        ("Gizlilikler", "Gizlilikler", "bi-eye-slash"),
+        ("Kategoriler", "Kategoriler", "bi-tags"),
+        ("Konumlar", "Konumlar", "bi-geo-alt"),
+        ("Kriptoloji Türleri", "KriptolojiTurleri", "bi-lock"),
+        ("Kullanım Seviyeleri", "KullanimSeviyeleri", "bi-bar-chart-steps"),
+        ("Lisans Takip Sorumluları", "LisansTakipSorumlulari", "bi-card-checklist"),
+        ("Sektörel Etkiler", "SektorelEtkiler", "bi-graph-up"),
+        ("Yedekleme Sorumluları", "YedeklemeSorumlulari", "bi-hdd"),
+        ("Yedekleme Tipleri", "YedeklemeTipleri", "bi-archive")
+    };
+
+    // Aktif sayfayı içeren grup açık başlar.
+    bool GrupAcik((string Ad, string Denetleyici, string Ikon)[] ogeler) =>
+        ogeler.Any(o => string.Equals(o.Denetleyici, aktifDenetleyici, StringComparison.OrdinalIgnoreCase));
+
+    var kullaniciAdi = User.Identity?.Name ?? string.Empty;
+    var basHarfler = kullaniciAdi.Length >= 2
+        ? kullaniciAdi[..2].ToUpperInvariant()
+        : kullaniciAdi.ToUpperInvariant();
+}
+
+<!DOCTYPE html>
+<html lang="@ayar.Kultur">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>@ViewData["Title"] - @UygulamaAyarlariOptions.Value.UygulamaAdi</title>
-    <link rel="icon" type="image/png" href="@UygulamaAyarlariOptions.Value.LogoYolu"/>
+    <title>@ViewData["Title"] - @ayar.UygulamaAdi</title>
+    <link rel="icon" href="@ayar.LogoYolu"/>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"/>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
-    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
-@if (TempData["ErrorMessage"] != null)
-{
-    <script>
-            $(document).ready(function() {
-                Swal.fire({
-                    title: 'Erişim Engellendi!',
-                    text: '@TempData["ErrorMessage"]',
-                    icon: 'error',
-                    confirmButtonText: 'Tamam'
-                });
-            });
-        </script>
-}
-    
-@if (TempData["SuccessMessage"] != null)
-{
-    <script>
-            $(document).ready(function() {
-                Swal.fire({
-                    title: 'Başarılı!',
-                    text: '@TempData["SuccessMessage"]',
-                    icon: 'success',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-            });
-        </script>
-}
-<nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="/" id="sidebarToggle">
-            <img src="@UygulamaAyarlariOptions.Value.LogoYolu" alt="@UygulamaAyarlariOptions.Value.UygulamaAdi" height="40">
-            @UygulamaAyarlariOptions.Value.UygulamaAdi
-        </a>
-        <div class="d-flex">
-            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
-                @await Component.InvokeAsync("AktifBirim")
+
+<header class="ve-ust">
+    <button type="button" class="ve-menu-dugmesi" id="menuAcKapa"
+            aria-label="Menüyü aç" aria-controls="kenarMenu" aria-expanded="false">
+        <i class="bi bi-list" style="font-size: 20px"></i>
+    </button>
+
+    <a class="ve-marka" href="/">
+        <img src="@ayar.LogoYolu" alt="" width="30" height="30"/>
+        <span>@ayar.UygulamaAdi</span>
+    </a>
+
+    <div class="ve-ust-sag">
+        @await Component.InvokeAsync("AktifBirim")
+
+        <div class="dropdown">
+            <button class="ve-cip dropdown-toggle" type="button" id="kullaniciMenusu"
+                    data-bs-toggle="dropdown" aria-expanded="false" style="padding: 3px 10px 3px 4px">
+                <span class="ve-avatar">@basHarfler</span>
+                <span class="ve-cip-ad">@kullaniciAdi</span>
+                <i class="bi bi-chevron-down" style="font-size: 12px; color: var(--ve-metin-4)"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="kullaniciMenusu">
+                <li class="dropdown-header">@kullaniciAdi</li>
+                <li>
+                    <a class="dropdown-item" asp-controller="Account" asp-action="SifreDegistir">
+                        <i class="bi bi-shield-lock"></i> Şifre değiştir
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"/></li>
+                <li>
+                    <a class="dropdown-item" href="/Account/Logout" style="color: var(--ve-hata)">
+                        <i class="bi bi-box-arrow-right"></i> Çıkış yap
+                    </a>
+                </li>
             </ul>
-            <div class="dropdown">
-                <button class="btn btn-primary dropdown-toggle" type="button" id="userDropdown"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-user-circle me-1"></i>
-                    <span>@User.Identity!.Name</span>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                   @*  <li>
-                        <a class="dropdown-item" href="/Profil">
-                            <i class="fas fa-user me-2"></i> Profil
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="/Ayarlar">
-                            <i class="fas fa-cog me-2"></i> Ayarlar
-                        </a>
-                    </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li> *@
-                    <li>
-                        <a class="dropdown-item" href="/Account/Logout">
-                            <i class="fas fa-sign-out-alt me-2"></i> Çıkış Yap
-                        </a>
-                    </li>
-                </ul>
-            </div>
         </div>
     </div>
+</header>
+
+<nav class="ve-menu" id="kenarMenu" aria-label="Ana menü">
+    <a href="/" class="ve-menu-baglanti @(aktifDenetleyici.Equals("Home", StringComparison.OrdinalIgnoreCase) ? "aktif" : "")">
+        <i class="bi bi-grid-1x2"></i>
+        <span>Genel Bakış</span>
+    </a>
+
+    @if (yTeknik)
+    {
+        <div class="ve-menu-grup">
+            <button class="ve-menu-grup-baslik @(GrupAcik(teknikOgeler) ? "" : "collapsed")" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#grupTeknik"
+                    aria-expanded="@(GrupAcik(teknikOgeler) ? "true" : "false")" aria-controls="grupTeknik">
+                <i class="bi bi-chevron-down"></i>
+                <span>VARLIKLAR</span>
+            </button>
+            <div class="collapse @(GrupAcik(teknikOgeler) ? "show" : "")" id="grupTeknik">
+                <div class="ve-menu-govde">
+                    @foreach (var (ad, denetleyici, ikon) in teknikOgeler)
+                    {
+                        <a href="/@denetleyici" class="ve-menu-baglanti @(denetleyici.Equals(aktifDenetleyici, StringComparison.OrdinalIgnoreCase) ? "aktif" : "")">
+                            <i class="bi @ikon"></i>
+                            <span>@ad</span>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (yBilgi)
+    {
+        <div class="ve-menu-grup">
+            <button class="ve-menu-grup-baslik @(GrupAcik(bilgiOgeler) ? "" : "collapsed")" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#grupBilgi"
+                    aria-expanded="@(GrupAcik(bilgiOgeler) ? "true" : "false")" aria-controls="grupBilgi">
+                <i class="bi bi-chevron-down"></i>
+                <span>BİLGİ VARLIKLARI</span>
+            </button>
+            <div class="collapse @(GrupAcik(bilgiOgeler) ? "show" : "")" id="grupBilgi">
+                <div class="ve-menu-govde">
+                    @foreach (var (ad, denetleyici, ikon) in bilgiOgeler)
+                    {
+                        <a href="/@denetleyici" class="ve-menu-baglanti @(denetleyici.Equals(aktifDenetleyici, StringComparison.OrdinalIgnoreCase) ? "aktif" : "")">
+                            <i class="bi @ikon"></i>
+                            <span>@ad</span>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (yYonet)
+    {
+        <div class="ve-menu-grup">
+            <button class="ve-menu-grup-baslik @(GrupAcik(yonetimOgeler) ? "" : "collapsed")" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#grupYonetim"
+                    aria-expanded="@(GrupAcik(yonetimOgeler) ? "true" : "false")" aria-controls="grupYonetim">
+                <i class="bi bi-chevron-down"></i>
+                <span>YÖNETİM</span>
+            </button>
+            <div class="collapse @(GrupAcik(yonetimOgeler) ? "show" : "")" id="grupYonetim">
+                <div class="ve-menu-govde">
+                    @foreach (var (ad, denetleyici, ikon) in yonetimOgeler)
+                    {
+                        <a href="/@denetleyici" class="ve-menu-baglanti @(denetleyici.Equals(aktifDenetleyici, StringComparison.OrdinalIgnoreCase) ? "aktif" : "")">
+                            <i class="bi @ikon"></i>
+                            <span>@ad</span>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="ve-menu-grup">
+            <button class="ve-menu-grup-baslik @(GrupAcik(tanimOgeler) ? "" : "collapsed")" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#grupTanim"
+                    aria-expanded="@(GrupAcik(tanimOgeler) ? "true" : "false")" aria-controls="grupTanim">
+                <i class="bi bi-chevron-down"></i>
+                <span>TANIM LİSTELERİ</span>
+            </button>
+            <div class="collapse @(GrupAcik(tanimOgeler) ? "show" : "")" id="grupTanim">
+                <div class="ve-menu-govde">
+                    @foreach (var (ad, denetleyici, ikon) in tanimOgeler)
+                    {
+                        <a href="/@denetleyici" class="ve-menu-baglanti @(denetleyici.Equals(aktifDenetleyici, StringComparison.OrdinalIgnoreCase) ? "aktif" : "")">
+                            <i class="bi @ikon"></i>
+                            <span>@ad</span>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
 </nav>
 
-<div id="sidebar-wrapper">
-    <div class="sidebar-heading">Ana Menü</div>
-    <div class="list-group list-group-flush mt-2">
-        @if (await AuthorizationService.YetkiliMi(User, Yetkiler.TeknikVarlikListele))
-        {
-            <a href="/AgveSistemler" class="list-group-item list-group-item-action"><i class="bi bi-hdd-network"></i>Ağ
-                ve Sistemler</a>
-            <a href="/Uygulamalar" class="list-group-item list-group-item-action">
-                <i
-                    class="bi bi-app"></i>Uygulamalar</a>
-            <a href="/TasinabilirCihazveOrtamlar" class="list-group-item list-group-item-action">
-                <i
-                    class="bi bi-laptop"></i>Taşınabilir Cihaz ve Ortamlar</a>
-            <a href="/IoTCihazlari" class="list-group-item list-group-item-action"><i class="bi bi-cpu"></i>IoT
-                Cihazları</a>
-            <a href="/FizikselMekanlar" class="list-group-item list-group-item-action"><i class="bi bi-building"></i>Fiziksel
-                Mekanlar</a>
-            <a href="/Personeller" class="list-group-item list-group-item-action">
-                <i
-                    class="bi bi-people"></i>Personel</a>
-            <a href="/KriptografiEnvanterleri" class="list-group-item list-group-item-action">
-                <i
-                    class="bi bi-shield-lock"></i>Kriptografi Envanteri</a>
-        }
+<div class="ve-ortu" id="menuOrtu"></div>
 
-        @if (await AuthorizationService.YetkiliMi(User, Yetkiler.BilgiVarlikListele))
-        {
-            <a href="/BasiliBilgiler" class="list-group-item list-group-item-action"><i class="bi bi-printer"></i>Basılı
-                Bilgiler</a>
-            <a href="/ElektronikBilgiler" class="list-group-item list-group-item-action">
-                <i
-                    class="bi bi-file-earmark"></i>Elektronik Bilgiler</a>
-            <a href="/Veritabanlari" class="list-group-item list-group-item-action"><i class="bi bi-database"></i>Veritabanları</a>
-            <a href="/Surecler" class="list-group-item list-group-item-action">
-                <i
-                    class="bi bi-diagram-3"></i>Süreçler</a>
-            <a href="/EpostaTalepleri" class="list-group-item list-group-item-action">
-                <i class="fa-solid fa-envelope"></i>Eposta Talepleri</a>
-        }
-
-        @if (await AuthorizationService.YetkiliMi(User, Yetkiler.SistemYonet))
-        {
-            <div class="sidebar-heading mt-2">Raporlar</div>
-            <a href="/Raporlama" class="list-group-item list-group-item-action"><i class="bi bi-person"></i>Genel Rapor</a>
-            <div class="sidebar-heading mt-2">Tanımlamalar</div>
-            <a href="/Birimler" class="list-group-item list-group-item-action"><i class="bi bi-diagram-3"></i>Birimler</a>
-            <a href="/Kullanicilar" class="list-group-item list-group-item-action"><i class="bi bi-person"></i>Kullanıcılar</a>
-            <a href="/Roller" class="list-group-item list-group-item-action">
-                <i
-                    class="bi bi-person-badge"></i>Roller</a>
-            <a href="/KullaniciRoller" class="list-group-item list-group-item-action"><i class="bi bi-person-check"></i>Kullanıcı
-                Roller</a>
-            <a href="/AnahtarSorumlulari" class="list-group-item list-group-item-action"><i class="bi bi-key"></i>Anahtar
-                Sorumluları</a>
-            <a href="/BagimliVarliklar" class="list-group-item list-group-item-action"><i class="bi bi-link"></i>Bağımlı
-                Varlıklar</a>
-            <a href="/BilgiSiniflari" class="list-group-item list-group-item-action">
-                <i
-                    class="bi bi-journal-bookmark"></i>Bilgi Sınıfları</a>
-            <a href="/Butunlukler" class="list-group-item list-group-item-action"><i class="bi bi-check-circle"></i>Bütünlükler</a>
-            <a href="/DestekDurumlari" class="list-group-item list-group-item-action"><i class="bi bi-headset"></i>Destek
-                Durumları</a>
-            <a href="/Durumlar" class="list-group-item list-group-item-action">
-                <i
-                    class="bi bi-toggle-on"></i>Durumlar</a>
-            <a href="/Erisilebilirlikler" class="list-group-item list-group-item-action">
-                <i
-                    class="bi bi-hand-index"></i>Erişilebilirlikler</a>
-            <a href="/EtkilenenKisiSayilari" class="list-group-item list-group-item-action">
-                <i
-                    class="bi bi-people-fill"></i>Etkilenen Kişi Sayıları</a>
-            <a href="/Gizlilikler" class="list-group-item list-group-item-action"><i class="bi bi-eye-slash"></i>Gizlilikler</a>
-            <a href="/Kategoriler" class="list-group-item list-group-item-action"><i class="bi bi-tags"></i>Kategoriler</a>
-            <a href="/Konumlar" class="list-group-item list-group-item-action"><i class="bi bi-geo-alt"></i>Konumlar</a>
-            <a href="/KriptolojiTurleri" class="list-group-item list-group-item-action"><i class="bi bi-lock"></i>Kriptoloji
-                Türleri</a>
-            <a href="/KullanimSeviyeleri" class="list-group-item list-group-item-action"><i class="bi bi-bar-chart"></i>Kullanım
-                Seviyeleri</a>
-            <a href="/LisansTakipSorumlulari" class="list-group-item list-group-item-action">
-                <i
-                    class="bi bi-card-checklist"></i>Lisans Takip Sorumluları</a>
-            <a href="/SektorelEtkiler" class="list-group-item list-group-item-action"><i class="bi bi-building"></i>Sektörel
-                Etkiler</a>
-            <a href="/YedeklemeSorumlulari" class="list-group-item list-group-item-action"><i class="bi bi-save"></i>Yedekleme
-                Sorumluları</a>
-            <a href="/YedeklemeTipleri" class="list-group-item list-group-item-action"><i class="bi bi-archive"></i>Yedekleme
-                Tipleri</a>
-            <a href="/Kurumlar" class="list-group-item list-group-item-action"><i class="fa-solid fa-building"></i>Kurumlar</a>
-        }
-    </div>
-</div>
-
-<div class="overlay"></div>
-
-<div id="page-content-wrapper">
+<div class="ve-icerik">
     <div class="container-fluid">
         <input type="hidden" id="errorMessage" value="@(TempData["ErrorMessage"] ?? ViewBag.ErrorMessage ?? "")"/>
-        <input type="hidden" id="errorStatusCode"
-               value="@(TempData["ErrorStatusCode"] ?? ViewBag.ErrorStatusCode ?? "")"/>
+        <input type="hidden" id="errorStatusCode" value="@(TempData["ErrorStatusCode"] ?? ViewBag.ErrorStatusCode ?? "")"/>
+        <input type="hidden" id="successMessage" value="@(TempData["SuccessMessage"] ?? "")"/>
         @RenderBody()
     </div>
-    <footer class="footer mt-auto py-3">
-        <div class="container-fluid">
-            <div class="text-center text-muted">
-                © 2025 Bilgi Sistemleri Dairesi Başkanlığı
-            </div>
-        </div>
+
+    <footer class="ve-alt">
+        © @DateTime.Now.Year @ayar.UygulamaAdi
     </footer>
 </div>
 
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="~/js/site.js" asp-append-version="true"></script>
-<script src="js/table-wrapper.js" asp-append-version="true"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<script>
-    $(document).ready(function () {
-        const errorMessage = $("#errorMessage").val();
-        const errorStatusCode = $("#errorStatusCode").val();
-
-        if (errorMessage && errorMessage.length > 0) {
-            Sweetalert2.fire({
-                icon: 'error',
-                title: 'Hata' + (errorStatusCode ? ' (' + errorStatusCode + ')' : ''),
-                text: errorMessage,
-                confirmButtonText: 'Tamam'
-            });
-        }
-    });
-</script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+<script src="~/js/table-wrapper.js" asp-append-version="true"></script>
 
 @await RenderSectionAsync("Scripts", required: false)
 </body>
