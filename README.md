@@ -296,10 +296,11 @@ yalnızca kurumlar arası yetkili görür.
 - Tablolar sürekli büyür. Uzun süre çalışan kurulumlarda `logs` ve
   `hata_loglari` için bir saklama süresi belirleyip düzenli temizlik
   planlanmalıdır; uygulama kendiliğinden silme yapmaz.
-- Bu sürümden önce yazılmış log kayıtlarında kiracı bilgisi boştur
-  (`organizasyon_id = 0`); bu kayıtlar kiracı yöneticisinin listesinde
-  görünmez. Tek kiracılı bir kurulumda tümünü mevcut organizasyona taşımak
-  için: `UPDATE logs SET organizasyon_id = <id> WHERE organizasyon_id = 0;`
+- Kiracı kimliği yazılamayan kayıtlar (giriş öncesi hatalar, bilinmeyen
+  kullanıcı adıyla giriş denemeleri) kurulumda tek organizasyon varsa ona
+  bağlanır; aksi halde sahipsiz kalır ve yalnızca `SUPERADMIN` görür.
+  Bu sürümden önce yazılmış sahipsiz kayıtları `SahipsizLoglariKurumaBagla`
+  migration'ı düzeltir.
 
 ## Veritabanı şeması
 

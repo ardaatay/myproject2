@@ -40,7 +40,7 @@ public class KimlikDogrulamaManager(
             // Kullanıcı yoksa olay hiçbir kiracıya bağlanamaz; tek organizasyonlu
             // kurulumlarda kayıt görünmez kalmasın diye o organizasyona yazılır.
             logService.OturumOlayiEkle(
-                OturumOlaylari.Giris, username, await TekOrganizasyonAsync(), false, "Kullanıcı bulunamadı.");
+                OturumOlaylari.Giris, username, await context.TekOrganizasyonIdAsync(), false, "Kullanıcı bulunamadı.");
 
             return new GirisSonucu { Durum = GirisDurumu.HataliKimlik, Mesaj = GenelHataMesaji };
         }
@@ -144,22 +144,6 @@ public class KimlikDogrulamaManager(
             OturumOlaylari.Giris, kullanici.Username, kullanici.OrganizasyonId, basarili, aciklama);
 
         return sonuc;
-    }
-
-    /// <summary>
-    /// Kiracısı belirlenemeyen oturum olayları için son çare. Kurulumda tek
-    /// organizasyon varsa kayıt ona bağlanır; birden fazlaysa sahipsiz bırakılır
-    /// ve yalnızca kurumlar arası yetkili görür.
-    /// </summary>
-    private async Task<int> TekOrganizasyonAsync()
-    {
-        var organizasyonlar = await context.Organizasyonlar
-            .AsNoTracking()
-            .Select(o => o.Id)
-            .Take(2)
-            .ToListAsync();
-
-        return organizasyonlar.Count == 1 ? organizasyonlar[0] : 0;
     }
 
     /// <summary>

@@ -92,7 +92,7 @@ public class KurumBilgileriManager(
             var kayit = organizasyonId > 0
                 ? await context.Organizasyonlar.AsNoTracking()
                     .FirstOrDefaultAsync(o => o.Id == organizasyonId)
-                : await TekOrganizasyonAsync();
+                : await context.TekOrganizasyonAsync();
 
             if (kayit is null)
                 return varsayilan;
@@ -111,16 +111,6 @@ public class KurumBilgileriManager(
             logger.LogWarning(ex, "Kurum kimliği okunamadı; uygulama ayarlarına düşüldü.");
             return varsayilan;
         }
-    }
-
-    private async Task<Entity.Concrete.Organizasyon?> TekOrganizasyonAsync()
-    {
-        var kayitlar = await context.Organizasyonlar
-            .AsNoTracking()
-            .Take(2)
-            .ToListAsync();
-
-        return kayitlar.Count == 1 ? kayitlar[0] : null;
     }
 
     private int OrganizasyonIdCoz()

@@ -31,6 +31,11 @@ public class LogRepository(
 
     public void AddLog(Log entity)
     {
+        // Oturum açılmadan oluşan kayıtlar kiracıya bağlanmazsa hiçbir listede
+        // görünmez; tek kurumlu dağıtımda o organizasyona yazılır.
+        if (entity.OrganizasyonId == 0)
+            entity.OrganizasyonId = context.TekOrganizasyonId();
+
         using var connection = new NpgsqlConnection(context.Database.GetConnectionString());
         connection.Open();
 
@@ -64,6 +69,9 @@ public class LogRepository(
 
     public async Task<string> AddHataLogAsync(HataLog entity, CancellationToken cancellationToken = default)
     {
+        if (entity.OrganizasyonId == 0)
+            entity.OrganizasyonId = await context.TekOrganizasyonIdAsync(cancellationToken);
+
         await using var connection = new NpgsqlConnection(context.Database.GetConnectionString());
         await connection.OpenAsync(cancellationToken);
 
