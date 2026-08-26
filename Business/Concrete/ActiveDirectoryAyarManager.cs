@@ -5,7 +5,6 @@ using Core.Security;
 using Dto.ActiveDirectory;
 using Dto.Kullanici.Enum;
 using Entity.Concrete;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Repository.Context;
 
@@ -21,10 +20,8 @@ namespace Business.Concrete;
 public class ActiveDirectoryAyarManager(
     VarlikEnvanteriDbContext context,
     IGizliVeriKoruyucu gizliVeriKoruyucu,
-    IAktifOrganizasyon aktifOrganizasyon,
     ILogService logService,
-    IIstekBaglami istekBaglami,
-    IHttpContextAccessor httpContextAccessor) : IActiveDirectoryAyarService
+    IIstekBaglami istekBaglami) : IActiveDirectoryAyarService
 {
     public async Task<ActiveDirectoryAyarDto> GetirAsync()
     {
@@ -242,26 +239,20 @@ public class ActiveDirectoryAyarManager(
             .FirstOrDefaultAsync(a => a.OrganizasyonId == organizasyonId);
 
     /// <summary>
-    /// Ayarların ait olduğu kiracı. Kurumlar arası yetkili oturumlarda
-    /// <see cref="IAktifOrganizasyon"/> bilinçli olarak null döndüğü için
-    /// değer, oturumun kendi claim'inden okunur.
+    /// Ayarların ait olduğu kiracı. Değer oturum claim'inden okunur: kurumlar
+    /// arası yetkili oturumlarda IAktifOrganizasyon bilinçli olarak null döner,
+    /// oysa ayarın hangi kuruma yazıldığı her zaman belirli olmalıdır.
     /// </summary>
     private int OrganizasyonIdCoz()
     {
-        if (aktifOrganizasyon.Id is { } id)
-            return id;
+        var organizasyonId = istekBaglami.OrganizasyonId;
 
-        var claim = httpContextAccessor.HttpContext?.User?.FindFirst(OrganizasyonClaimTuru)?.Value;
-
-        if (int.TryParse(claim, out var claimId))
-            return claimId;
+        if (organizasyonId > 0)
+            return organizasyonId;
 
         throw new InvalidOperationException(
             "Dizin ayarları için aktif organizasyon belirlenemedi. Oturumun organizasyon bilgisi eksik.");
     }
-
-    /// <summary>Oturum çerezinde kiracıyı taşıyan claim.</summary>
-    private const string OrganizasyonClaimTuru = KiraciClaim.OrganizasyonId;
 
     private static int VarsayilanPort(ActiveDirectoryAyarDto dto) =>
         dto.SslKullan ? ActiveDirectoryVarsayilan.SslPort : ActiveDirectoryVarsayilan.Port;

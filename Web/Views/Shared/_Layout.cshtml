@@ -1,6 +1,9 @@
 @{
     var ayar = UygulamaAyarlariOptions.Value;
 
+    // Başlık ve logo kurum kaydından gelir; kayıt boşsa uygulama ayarlarına düşer.
+    var kimlik = await KurumBilgileriService.GorunenKimlikAsync();
+
     var yTeknik = await AuthorizationService.YetkiliMi(User, Yetkiler.TeknikVarlikListele);
     var yBilgi = await AuthorizationService.YetkiliMi(User, Yetkiler.BilgiVarlikListele);
     var yYonet = await AuthorizationService.YetkiliMi(User, Yetkiler.SistemYonet);
@@ -38,7 +41,8 @@
         ("Active Directory", "ActiveDirectory", "bi-diagram-3"),
         ("İşlem Logları", "IslemLoglari", "bi-journal-text"),
         ("Hata Logları", "HataLoglari", "bi-bug"),
-        ("Kurumlar", "Kurumlar", "bi-buildings")
+        ("Kurum Bilgileri", "KurumBilgileri", "bi-building-gear"),
+        ("İlgili Kurumlar", "Kurumlar", "bi-buildings")
     };
 
     var tanimOgeler = new[]
@@ -77,8 +81,8 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>@ViewData["Title"] - @ayar.UygulamaAdi</title>
-    <link rel="icon" href="@ayar.LogoYolu"/>
+    <title>@ViewData["Title"] - @kimlik.Ad</title>
+    <link rel="icon" href="@kimlik.LogoYolu"/>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"/>
@@ -94,8 +98,8 @@
     </button>
 
     <a class="ve-marka" href="/">
-        <img src="@ayar.LogoYolu" alt="" width="30" height="30"/>
-        <span>@ayar.UygulamaAdi</span>
+        <img src="@kimlik.LogoYolu" alt="" width="30" height="30"/>
+        <span>@kimlik.Ad</span>
     </a>
 
     <div class="ve-ust-sag">
@@ -234,7 +238,7 @@
     </div>
 
     <footer class="ve-alt">
-        © @DateTime.Now.Year @ayar.UygulamaAdi
+        © @DateTime.Now.Year @kimlik.Ad
     </footer>
 </div>
 

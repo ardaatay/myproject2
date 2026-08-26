@@ -1,11 +1,16 @@
 @model IEnumerable<Dto.Kurum.ListKurumDto>
 
 @{
-	ViewData["Title"] = "Kurumlar";
+	ViewData["Title"] = "İlgili Kurumlar";
 }
 
 <div class="container-fluid">
-	<h1 class="mt-4">Kurumlar Listesi</h1>
+	<h1 class="mt-4">İlgili Kurumlar</h1>
+	<p class="text-muted">
+		E-posta taleplerinde muhatap olarak seçilen kurumlar. Üçüncü taraf kurumları da içerebilir.
+		Kendi kurumunuzun adı ve logosu için
+		<a asp-controller="KurumBilgileri" asp-action="Index">Kurum Bilgileri</a> ekranını kullanın.
+	</p>
 	<div class="card mb-4">
 		<div class="card-header">
 			<a asp-action="Create" class="btn btn-primary">Yeni Ekle</a>

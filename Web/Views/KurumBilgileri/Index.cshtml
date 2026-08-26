@@ -1,0 +1,90 @@
+@model Dto.Organizasyon.KurumBilgileriDto
+
+@{
+	ViewData["Title"] = "Kurum Bilgileri";
+	var ayar = UygulamaAyarlariOptions.Value;
+}
+
+<div class="container-fluid">
+	<h1 class="mt-4">Kurum Bilgileri</h1>
+	<p class="text-muted">
+		Uygulamayı kullanan kurumun kendi kaydı. Buradaki ad ve logo, üst çubukta ve giriş
+		ekranında görünür.
+	</p>
+
+	<div class="alert alert-secondary small">
+		<i class="bi bi-info-circle me-1"></i>
+		Bu ekran, menüdeki <a asp-controller="Kurumlar" asp-action="Index">İlgili Kurumlar</a>
+		listesiyle aynı şey değildir. O liste, e-posta taleplerinde muhatap olarak seçilen —
+		üçüncü tarafları da içerebilen — kurumları tutar. Burası ise kurulumun sahibi olan
+		kurumdur ve tüm envanter verisi bu kayda bağlıdır.
+	</div>
+
+	<form asp-action="Index" method="post">
+		<input type="hidden" asp-for="Id"/>
+
+		<div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 px-3 small"></div>
+
+		<div class="card mb-4">
+			<div class="card-body">
+				<div class="row">
+					<div class="col-md-8 mb-3">
+						<label asp-for="Ad" class="form-label"></label>
+						<input asp-for="Ad" class="form-control" autofocus/>
+						<div class="form-text">Başlıkta ve giriş ekranında görünen ad.</div>
+						<span asp-validation-for="Ad" class="text-danger small"></span>
+					</div>
+
+					<div class="col-md-4 mb-3">
+						<label asp-for="Kod" class="form-label"></label>
+						<input asp-for="Kod" class="form-control"/>
+						<div class="form-text">Kısa, benzersiz tanımlayıcı. Zorunlu değildir.</div>
+						<span asp-validation-for="Kod" class="text-danger small"></span>
+					</div>
+
+					<div class="col-md-8 mb-3">
+						<label asp-for="LogoUrl" class="form-label"></label>
+						<input asp-for="LogoUrl" class="form-control" placeholder="@ayar.LogoYolu"/>
+						<div class="form-text">
+							<code>wwwroot</code> köküne göre bir yol (<code>/img/logo.svg</code>) ya da tam bir
+							http(s) adresi. Boş bırakılırsa uygulama ayarlarındaki logo kullanılır.
+						</div>
+						<span asp-validation-for="LogoUrl" class="text-danger small"></span>
+					</div>
+
+					<div class="col-md-4 mb-3">
+						<label class="form-label">Önizleme</label>
+						<div class="d-flex align-items-center gap-2 border rounded p-2">
+							<img id="logoOnizleme"
+							     src="@(string.IsNullOrWhiteSpace(Model.LogoUrl) ? ayar.LogoYolu : Model.LogoUrl)"
+							     alt="" width="34" height="34" style="border-radius: 8px; object-fit: contain"/>
+							<span id="adOnizleme" class="fw-semibold">@Model.Ad</span>
+						</div>
+					</div>
+				</div>
+
+				<button type="submit" class="btn btn-primary">Kaydet</button>
+			</div>
+		</div>
+	</form>
+</div>
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial"/>
+
+	<script>
+		// Kaydetmeden önce başlığın nasıl görüneceği anlaşılsın.
+		const varsayilanLogo = '@ayar.LogoYolu';
+
+		document.getElementById('Ad').addEventListener('input', function () {
+			document.getElementById('adOnizleme').textContent = this.value || '@ayar.UygulamaAdi';
+		});
+
+		document.getElementById('LogoUrl').addEventListener('input', function () {
+			const deger = this.value.trim();
+			// Yalnızca site içi yol ya da http(s) önizlenir; sunucudaki doğrulamanın aynısı.
+			const guvenli = deger === '' || deger.startsWith('/') || /^https?:\/\//i.test(deger);
+			document.getElementById('logoOnizleme').src = guvenli && deger !== '' ? deger : varsayilanLogo;
+		});
+	</script>
+}

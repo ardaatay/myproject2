@@ -182,10 +182,18 @@ sorgu filtresi kurar ve yeni kayıtlara aktif organizasyonu otomatik atar.
 Aktif organizasyon, oturum açan kullanıcının `OrganizasyonId` claim'inden gelir.
 `SUPERADMIN` rolüne sahip kullanıcılar filtreden muaftır ve tüm kiracıları görür.
 
-> `Organizasyon` ile `Kurum` farklı şeylerdir. `Organizasyon` kiracıdır —
-> uygulamayı kullanan ve verinin sahibi olan kurumdur. `Kurum` ise e-posta
-> taleplerinde "bu talep hangi kurumla ilgili" sorusunu yanıtlayan, üçüncü taraf
-> kurumları da içerebilen ortak bir referans listesidir.
+> **`Organizasyon` ile `Kurum` farklı şeylerdir** — ikisi de Türkçede "kurum"
+> denk düştüğü için en sık karışan nokta budur.
+>
+> | | Nedir | Nereden yönetilir |
+> |---|---|---|
+> | `Organizasyon` | Kiracı: uygulamayı kullanan ve verinin sahibi olan kurum. Tüm envanter bu kayda bağlıdır. | **Kurum Bilgileri** ekranı |
+> | `Kurum` | E-posta taleplerinde "bu talep hangi kurumla ilgili" sorusunu yanıtlayan referans listesi; üçüncü taraf kurumları da içerebilir. | **İlgili Kurumlar** ekranı |
+>
+> Başlıkta ve giriş ekranında görünen ad ile logo **Kurum Bilgileri**'nden gelir.
+> Kayıt boşsa `appsettings` içindeki `UygulamaAyarlari.UygulamaAdi` ve `LogoYolu`
+> kullanılır; giriş ekranında oturum olmadığı için kurulumda tek organizasyon
+> varsa onun bilgileri gösterilir.
 
 Temiz kurulumda tek bir organizasyon tohumlanır; tek kiracılı dağıtımlarda
 başka bir şey yapmanız gerekmez.

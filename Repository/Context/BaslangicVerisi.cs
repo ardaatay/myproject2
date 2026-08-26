@@ -54,6 +54,7 @@ public static class BaslangicVerisi
         }
 
         await DurumlariKurAsync(context, cancellationToken);
+        await IlkKurumuKurAsync(context, organizasyon.Ad, cancellationToken);
 
         var eklenenRoller = false;
 
@@ -188,6 +189,33 @@ public static class BaslangicVerisi
                 (SELECT COALESCE(MAX(id), 1) FROM durumlar));
             """,
             cancellationToken);
+    }
+
+    /// <summary>
+    /// E-posta talebi zorunlu bir kurum referansı ister; liste boşken açılır
+    /// menü boş gelir ve kayıt yabancı anahtar ihlaliyle düşer. Kurulum, kendi
+    /// kurumunu ilk kayıt olarak ekleyerek bu çıkmazı kaldırır.
+    ///
+    /// Bu liste, kurulumun sahibi olan kiracıdan (<see cref="Organizasyon"/>)
+    /// farklıdır: e-posta taleplerinde muhatap olarak seçilen, üçüncü tarafları
+    /// da içerebilen bir referans listesidir. Yönetici sonradan düzenleyebilir.
+    /// </summary>
+    private static async Task IlkKurumuKurAsync(
+        VarlikEnvanteriDbContext context,
+        string organizasyonAdi,
+        CancellationToken cancellationToken)
+    {
+        if (await context.Kurumlar.AnyAsync(cancellationToken))
+            return;
+
+        context.Kurumlar.Add(new Kurum
+        {
+            Ad = organizasyonAdi,
+            Durum = true,
+            CreatedDate = DateTime.Now
+        });
+
+        await context.SaveChangesAsync(cancellationToken);
     }
 
     private static string GeciciSifreUret()

@@ -58,6 +58,7 @@ public static class BusinessExtensions
         services.AddProxiedScoped<IGuvenlikModuService, GuvenlikModuManager>();
         services.AddProxiedScoped<IEpostaTalepService, EpostaTalepManager>();
         services.AddProxiedScoped<IKurumService, KurumManager>();
+        services.AddProxiedScoped<IKurumBilgileriService, KurumBilgileriManager>();
         services.AddProxiedScoped<IBirimService, BirimManager>();
 
         // Kimlik doğrulama ve dizin servisleri aspect proxy'si olmadan kaydedilir:

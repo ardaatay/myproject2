@@ -1,5 +1,9 @@
 @{
     var ayar = UygulamaAyarlariOptions.Value;
+
+    // Oturum henüz açılmadığı için kurum, tek organizasyonlu kurulumlarda
+    // kayıttan; aksi halde uygulama ayarlarından çözülür.
+    var kimlik = await KurumBilgileriService.GorunenKimlikAsync();
     var genis = ViewData["GirisGenisMi"] as bool? ?? false;
 }
 
@@ -8,8 +12,8 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>@ViewData["Title"] - @ayar.UygulamaAdi</title>
-    <link rel="icon" href="@ayar.LogoYolu"/>
+    <title>@ViewData["Title"] - @kimlik.Ad</title>
+    <link rel="icon" href="@kimlik.LogoYolu"/>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"/>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
@@ -22,8 +26,8 @@
         <span class="ve-giris-desen" aria-hidden="true"></span>
 
         <div style="display: flex; align-items: center; gap: 12px">
-            <img src="@ayar.LogoYolu" alt="" width="38" height="38" style="border-radius: 9px"/>
-            <span style="font-size: 18px; font-weight: 600; letter-spacing: -.01em">@ayar.UygulamaAdi</span>
+            <img src="@kimlik.LogoYolu" alt="" width="38" height="38" style="border-radius: 9px"/>
+            <span style="font-size: 18px; font-weight: 600; letter-spacing: -.01em">@kimlik.Ad</span>
         </div>
 
         <h1 class="ve-giris-slogan">Kurumun bilgi varlıkları tek yerde.</h1>
@@ -43,8 +47,8 @@
     <div class="ve-giris-form">
         <div class="ve-giris-kutu" style="@(genis ? "max-width: 560px" : "")">
             <div class="ve-giris-mobil-marka">
-                <img src="@ayar.LogoYolu" alt="" width="34" height="34"/>
-                <span>@ayar.UygulamaAdi</span>
+                <img src="@kimlik.LogoYolu" alt="" width="34" height="34"/>
+                <span>@kimlik.Ad</span>
             </div>
             @RenderBody()
         </div>
