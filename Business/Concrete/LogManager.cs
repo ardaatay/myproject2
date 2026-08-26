@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using Business.Abstract;
 using Core.Logging;
 using Dto.DTOs;
@@ -33,6 +34,33 @@ public class LogManager(
             // düşürmek. Çağıran hiçbir şey fark etmemelidir.
             logger.LogError(ex, "İşlem logu yazılamadı: {Sinif}.{Metot}", entity.ClassName, entity.MethodName);
         }
+    }
+
+    public void OturumOlayiEkle(
+        string islem,
+        string kullaniciAdi,
+        int organizasyonId,
+        bool basarili,
+        string? sonuc = null)
+    {
+        // Denenen kullanıcı adı saldırgan denetimindedir; yalnızca bu alan
+        // yazılır, şifre hiçbir biçimde kayda geçmez.
+        var parametreler = JsonSerializer.Serialize(new { KullaniciAdi = kullaniciAdi });
+
+        Add(new Log
+        {
+            OrganizasyonId = organizasyonId,
+            ClassName = OturumOlaylari.Modul,
+            MethodName = islem,
+            Parameters = parametreler,
+            ExecutingTime = DateTime.Now,
+            Username = kullaniciAdi,
+            IpAdresi = istekBaglami.IpAdresi,
+            Yol = istekBaglami.Yol,
+            Basarili = basarili,
+            ReturnValue = basarili ? sonuc ?? "Başarılı" : null,
+            Error = basarili ? null : sonuc
+        });
     }
 
     public async Task<string> HataKaydetAsync(

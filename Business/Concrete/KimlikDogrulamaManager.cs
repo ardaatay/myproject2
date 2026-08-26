@@ -1,5 +1,6 @@
 using AutoMapper;
 using Business.Abstract;
+using Core.Logging;
 using Core.Security;
 using Dto.ActiveDirectory;
 using Dto.Kullanici;
@@ -18,6 +19,7 @@ public class KimlikDogrulamaManager(
     IActiveDirectoryService activeDirectoryService,
     IActiveDirectoryAyarService activeDirectoryAyarService,
     IOptions<SifrePolitikasi> sifrePolitikasi,
+    ILogService logService,
     IMapper mapper) : IKimlikDogrulamaService
 {
     private readonly SifrePolitikasi _politika = sifrePolitikasi.Value;
@@ -34,25 +36,33 @@ public class KimlikDogrulamaManager(
             .FirstOrDefaultAsync(k => k.Username == username);
 
         if (kullanici is null)
+        {
+            // Kullanıcı yoksa olay hiçbir kiracıya bağlanamaz; tek organizasyonlu
+            // kurulumlarda kayıt görünmez kalmasın diye o organizasyona yazılır.
+            logService.OturumOlayiEkle(
+                OturumOlaylari.Giris, username, await TekOrganizasyonAsync(), false, "Kullanıcı bulunamadı.");
+
             return new GirisSonucu { Durum = GirisDurumu.HataliKimlik, Mesaj = GenelHataMesaji };
+        }
 
         if (kullanici.KilitBitisTarihi is { } kilit && kilit > DateTime.Now)
         {
             var kalan = (int)Math.Ceiling((kilit - DateTime.Now).TotalMinutes);
-            return new GirisSonucu
+
+            return GirisiKaydet(kullanici, new GirisSonucu
             {
                 Durum = GirisDurumu.Kilitli,
                 Mesaj = $"Hesabınız çok sayıda hatalı denemeden dolayı kilitlendi. " +
                         $"Lütfen {kalan} dakika sonra tekrar deneyin."
-            };
+            });
         }
 
         if (!kullanici.Durum)
-            return new GirisSonucu
+            return GirisiKaydet(kullanici, new GirisSonucu
             {
                 Durum = GirisDurumu.Pasif,
                 Mesaj = "Hesabınız pasif durumda. Lütfen sistem yöneticinizle iletişime geçin."
-            };
+            });
 
         // Kimlik, kullanıcının giriş yöntemine göre ya yerel karmayla ya da
         // dizine bağlanarak doğrulanır. İkisinin de ardından gelen roller,
@@ -69,7 +79,7 @@ public class KimlikDogrulamaManager(
             if (dogrulama.Durum == GirisDurumu.HataliKimlik)
                 await BasarisizDenemeKaydetAsync(kullanici);
 
-            return dogrulama;
+            return GirisiKaydet(kullanici, dogrulama);
         }
 
         var roller = kullanici.KullaniciRoller
@@ -79,11 +89,11 @@ public class KimlikDogrulamaManager(
             .ToList();
 
         if (roller.Count == 0)
-            return new GirisSonucu
+            return GirisiKaydet(kullanici, new GirisSonucu
             {
                 Durum = GirisDurumu.RolTanimlanmamis,
                 Mesaj = "Kullanıcınıza rol tanımlaması yapılmalıdır. Lütfen sistem yöneticinizle iletişime geçin."
-            };
+            });
 
         kullanici.BasarisizGirisSayisi = 0;
         kullanici.KilitBitisTarihi = null;
@@ -92,7 +102,7 @@ public class KimlikDogrulamaManager(
 
         await context.SaveChangesAsync();
 
-        return new GirisSonucu
+        return GirisiKaydet(kullanici, new GirisSonucu
         {
             Durum = GirisDurumu.Basarili,
             Kullanici = mapper.Map<ListKullaniciDto>(kullanici),
@@ -101,7 +111,55 @@ public class KimlikDogrulamaManager(
             // uygulama içi şifre değiştirme akışı çalıştırılmaz.
             SifreDegistirmeliMi = kullanici.GirisYontemi == GirisYontemi.Yerel && kullanici.SifreDegistirmeliMi,
             SecurityStamp = kullanici.SecurityStamp
+        });
+    }
+
+    /// <summary>
+    /// Giriş denemesinin sonucunu işlem loguna yazar ve sonucu olduğu gibi
+    /// döndürür; böylece her çıkış noktası tek satırla kayıt altına alınır.
+    ///
+    /// Kullanıcıya gösterilen mesaj değil, denemenin gerçek sonucu yazılır:
+    /// giriş ekranı hangi bilginin yanlış olduğunu gizler, denetim izi gizlememelidir.
+    /// </summary>
+    private GirisSonucu GirisiKaydet(Kullanici kullanici, GirisSonucu sonuc)
+    {
+        var basarili = sonuc.Durum == GirisDurumu.Basarili;
+
+        var aciklama = sonuc.Durum switch
+        {
+            GirisDurumu.Basarili => kullanici.GirisYontemi == GirisYontemi.ActiveDirectory
+                ? "Active Directory üzerinden giriş yapıldı."
+                : "Yerel şifreyle giriş yapıldı.",
+            GirisDurumu.HataliKimlik => "Şifre hatalı.",
+            GirisDurumu.Kilitli => "Hesap kilitli.",
+            GirisDurumu.Pasif => "Hesap pasif.",
+            GirisDurumu.SifreBelirlenmemis => "Hesaba şifre tanımlanmamış.",
+            GirisDurumu.RolTanimlanmamis => "Kullanıcının rolü yok.",
+            GirisDurumu.DizinYapilandirilmamis => "Dizin bağlantısı yapılandırılmamış veya erişilemiyor.",
+            GirisDurumu.DizinErisimHatasi => "Dizin girişe izin vermedi.",
+            _ => sonuc.Durum.ToString()
         };
+
+        logService.OturumOlayiEkle(
+            OturumOlaylari.Giris, kullanici.Username, kullanici.OrganizasyonId, basarili, aciklama);
+
+        return sonuc;
+    }
+
+    /// <summary>
+    /// Kiracısı belirlenemeyen oturum olayları için son çare. Kurulumda tek
+    /// organizasyon varsa kayıt ona bağlanır; birden fazlaysa sahipsiz bırakılır
+    /// ve yalnızca kurumlar arası yetkili görür.
+    /// </summary>
+    private async Task<int> TekOrganizasyonAsync()
+    {
+        var organizasyonlar = await context.Organizasyonlar
+            .AsNoTracking()
+            .Select(o => o.Id)
+            .Take(2)
+            .ToListAsync();
+
+        return organizasyonlar.Count == 1 ? organizasyonlar[0] : 0;
     }
 
     /// <summary>
@@ -204,6 +262,8 @@ public class KimlikDogrulamaManager(
 
         if (kullanici.GirisYontemi == GirisYontemi.ActiveDirectory)
         {
+            SifreOlayiKaydet(OturumOlaylari.SifreDegistir, kullanici, false, "Şifre Active Directory üzerinde yönetiliyor.");
+
             return (false, new[]
             {
                 "Şifreniz Active Directory üzerinde yönetiliyor. " +
@@ -214,6 +274,7 @@ public class KimlikDogrulamaManager(
         if (mevcutSifreDogrulansin &&
             sifreKoruyucu.Dogrula(kullanici.PasswordHash, mevcutSifre ?? "") == SifreDogrulamaSonucu.Basarisiz)
         {
+            SifreOlayiKaydet(OturumOlaylari.SifreDegistir, kullanici, false, "Mevcut şifre hatalı.");
             return (false, new[] { "Mevcut şifre hatalı." }, null);
         }
 
@@ -231,6 +292,8 @@ public class KimlikDogrulamaManager(
         kullanici.KilitBitisTarihi = null;
 
         await context.SaveChangesAsync();
+
+        SifreOlayiKaydet(OturumOlaylari.SifreDegistir, kullanici, true, "Şifre değiştirildi.");
 
         return (true, [], kullanici.SecurityStamp);
     }
@@ -259,6 +322,8 @@ public class KimlikDogrulamaManager(
         // bu işlem Active Directory tarafında yapılmalıdır.
         if (kullanici.GirisYontemi == GirisYontemi.ActiveDirectory)
         {
+            SifreOlayiKaydet(OturumOlaylari.SifreSifirla, kullanici, false, "Dizine bağlı hesabın şifresi buradan sıfırlanamaz.");
+
             return SifreSifirlamaSonucu.Basarisiz(
                 "Bu hesabın şifresi Active Directory üzerinde yönetiliyor ve buradan sıfırlanamaz.");
         }
@@ -276,8 +341,19 @@ public class KimlikDogrulamaManager(
 
         await context.SaveChangesAsync();
 
+        // Sıfırlamayı yapan yöneticinin adı istek bağlamından okunur; kayıt
+        // hangi hesabın sıfırlandığını taşır.
+        SifreOlayiKaydet(OturumOlaylari.SifreSifirla, kullanici, true, "Yönetici tek kullanımlık şifre üretti.");
+
         return SifreSifirlamaSonucu.Olustu(yeniSifre);
     }
+
+    /// <summary>
+    /// Şifre olaylarını işlem loguna yazar. Ne mevcut ne de yeni şifre kayda
+    /// geçer; yalnızca hangi hesapta ne olduğu yazılır.
+    /// </summary>
+    private void SifreOlayiKaydet(string islem, Kullanici kullanici, bool basarili, string aciklama) =>
+        logService.OturumOlayiEkle(islem, kullanici.Username, kullanici.OrganizasyonId, basarili, aciklama);
 
     /// <summary>
     /// Şifre politikasının her maddesini karşılayan, kriptografik olarak

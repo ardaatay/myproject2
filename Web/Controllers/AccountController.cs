@@ -1,4 +1,5 @@
 using Business.Abstract;
+using Core.Logging;
 using Core.Configuration;
 using Core.Util;
 using Dto.Kullanici;
@@ -15,6 +16,8 @@ namespace Web.Controllers
 {
     public class AccountController(
         IKimlikDogrulamaService kimlikDogrulamaService,
+        ILogService logService,
+        IIstekBaglami istekBaglami,
         KullaniciIstatistikService istatistikService,
         IKullaniciBirimService kullaniciBirimService,
         IKullaniciService kullaniciService,
@@ -80,7 +83,16 @@ namespace Web.Controllers
         public async Task<IActionResult> Logout()
         {
             if (!string.IsNullOrEmpty(User.Identity?.Name))
+            {
                 istatistikService.KullaniciCikisYapti(User.Identity.Name);
+
+                logService.OturumOlayiEkle(
+                    OturumOlaylari.Cikis,
+                    User.Identity.Name,
+                    istekBaglami.OrganizasyonId,
+                    basarili: true,
+                    "Oturum kapatıldı.");
+            }
 
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 

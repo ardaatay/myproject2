@@ -259,14 +259,29 @@ liste bu duruma göre süzülebilir ve özet kartlarında açık kayıt sayısı
 
 ### Neler loglanır
 
-İşlem logu, iş sınıflarındaki `[LogAspect]` işaretine bağlıdır. Varlık
-yönetiminin yanı sıra kullanıcı, rol ve rol atama işlemleri de kayda alınır.
+Varlık, kullanıcı, rol ve rol atama işlemlerinin ekleme/güncelleme/silme
+adımları `[LogAspect]` işaretiyle otomatik kaydedilir.
 
-Kimlik doğrulama (`KimlikDogrulamaManager`) ve dizin servisleri bilinçli olarak
-bu sarmalın dışındadır: parametreleri düz metin şifre taşır ve loglanmamalıdır.
-Active Directory ayarlarının değiştirilmesi bu yüzden elle, yalnızca güvenli
-alanlarla kaydedilir — servis hesabı şifresinin kendisi değil, yalnızca
-değiştirilip değiştirilmediği yazılır.
+Oturum olayları bu sarmalın dışındadır ve elle yazılır: giriş ve şifre
+akışlarının parametreleri düz metin şifre taşır, serileştirilmemelidir. Aynı
+gerekçeyle Active Directory ayar değişikliği de elle kaydedilir — servis hesabı
+şifresinin kendisi değil, yalnızca değiştirilip değiştirilmediği yazılır.
+
+Listede **Oturum** modülü altında görünen olaylar:
+
+| Olay | Ne zaman | Kayda giren |
+|---|---|---|
+| `Giris` | Her giriş denemesi | Kullanıcı adı, sonuç (şifre hatalı / hesap kilitli / pasif / rolü yok / dizin reddetti), IP |
+| `Cikis` | Oturum kapatma | Kullanıcı adı, IP |
+| `SifreDegistir` | Kullanıcının kendi şifresini değiştirmesi | Hesap ve sonuç |
+| `SifreSifirla` | Yönetici sıfırlaması | Sıfırlanan hesap |
+
+Hiçbir şifre — ne mevcut, ne yeni, ne de denenen — kayda geçmez. Başarısız
+girişte yazılan tek kullanıcı girdisi denenen kullanıcı adıdır.
+
+Girişte kullanıcı adı hiçbir hesapla eşleşmiyorsa olay bir kiracıya bağlanamaz;
+kurulumda tek organizasyon varsa ona yazılır, birden fazlaysa sahipsiz kalır ve
+yalnızca kurumlar arası yetkili görür.
 
 ### İşletim notları
 
