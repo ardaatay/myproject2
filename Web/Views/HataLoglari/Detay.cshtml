@@ -1,0 +1,122 @@
+@model Dto.Loglar.HataLogDetayDto
+
+@{
+	ViewData["Title"] = "Hata Kaydı";
+}
+
+<div class="container-fluid">
+	<h1 class="mt-4">Hata Kaydı</h1>
+
+	<div class="card mb-4">
+		<div class="card-header d-flex justify-content-between align-items-center">
+			<code style="font-size: 1.1rem; user-select: all">@Model.Kod</code>
+			<span class="badge @(Model.Cozuldu ? "bg-success" : "bg-danger")">@Model.DurumStr</span>
+		</div>
+		<div class="card-body">
+			<dl class="row mb-0">
+				<dt class="col-sm-3">Tarih</dt>
+				<dd class="col-sm-9">@Model.Tarih.ToString("dd.MM.yyyy HH:mm:ss")</dd>
+
+				<dt class="col-sm-3">Tür</dt>
+				<dd class="col-sm-9">@Model.Tur</dd>
+
+				<dt class="col-sm-3">Durum kodu</dt>
+				<dd class="col-sm-9">@Model.DurumKodu</dd>
+
+				<dt class="col-sm-3">İstek</dt>
+				<dd class="col-sm-9">
+					@(string.IsNullOrEmpty(Model.HttpYontemi) ? "" : Model.HttpYontemi + " ")@(string.IsNullOrEmpty(Model.Yol) ? "—" : Model.Yol)
+				</dd>
+
+				<dt class="col-sm-3">Kullanıcı</dt>
+				<dd class="col-sm-9">@(string.IsNullOrEmpty(Model.Kullanici) ? "—" : Model.Kullanici)</dd>
+
+				<dt class="col-sm-3">IP adresi</dt>
+				<dd class="col-sm-9">@(string.IsNullOrEmpty(Model.IpAdresi) ? "—" : Model.IpAdresi)</dd>
+
+				<dt class="col-sm-3">İstek numarası</dt>
+				<dd class="col-sm-9"><code>@(string.IsNullOrEmpty(Model.IstekId) ? "—" : Model.IstekId)</code></dd>
+
+				@if (Model.IslemLogId is { } islemId)
+				{
+					<dt class="col-sm-3">İlgili işlem</dt>
+					<dd class="col-sm-9">
+						<a asp-controller="IslemLoglari" asp-action="Detay" asp-route-id="@islemId"
+						   class="btn btn-sm btn-outline-secondary">
+							<i class="bi bi-list-check me-1"></i>İşlem loguna git
+						</a>
+					</dd>
+				}
+			</dl>
+		</div>
+	</div>
+
+	<div class="card mb-4 border-danger">
+		<div class="card-header text-danger">Teknik mesaj</div>
+		<div class="card-body">
+			<pre class="mb-0" style="white-space: pre-wrap; word-break: break-word">@Model.Mesaj</pre>
+		</div>
+	</div>
+
+	@if (!string.IsNullOrEmpty(Model.KullaniciMesaji) && Model.KullaniciMesaji != Model.Mesaj)
+	{
+		<div class="card mb-4">
+			<div class="card-header">Kullanıcıya gösterilen mesaj</div>
+			<div class="card-body">
+				<pre class="mb-0" style="white-space: pre-wrap; word-break: break-word">@Model.KullaniciMesaji</pre>
+			</div>
+		</div>
+	}
+
+	<div class="card mb-4">
+		<div class="card-header">Yığın izi ve iç istisnalar</div>
+		<div class="card-body">
+			<pre class="mb-0 small" style="white-space: pre-wrap; word-break: break-word">@(string.IsNullOrEmpty(Model.Ayrinti) ? "—" : Model.Ayrinti)</pre>
+		</div>
+	</div>
+
+	<div class="card mb-4">
+		<div class="card-header">Çözüm durumu</div>
+		<div class="card-body">
+			@if (Model.Cozuldu)
+			{
+				<p class="mb-2">
+					<i class="bi bi-check-circle text-success me-1"></i>
+					@Model.CozulmeTarihi?.ToString("dd.MM.yyyy HH:mm") tarihinde
+					<strong>@Model.CozenKullanici</strong> tarafından çözüldü olarak işaretlendi.
+				</p>
+
+				@if (!string.IsNullOrEmpty(Model.CozumNotu))
+				{
+					<blockquote class="border-start ps-3 text-muted">@Model.CozumNotu</blockquote>
+				}
+			}
+
+			<form asp-action="Cozum" method="post">
+				@Html.AntiForgeryToken()
+				<input type="hidden" name="Id" value="@Model.Id"/>
+				<input type="hidden" name="Cozuldu" value="@((!Model.Cozuldu).ToString().ToLowerInvariant())"/>
+
+				@if (!Model.Cozuldu)
+				{
+					<div class="mb-3">
+						<label for="Not" class="form-label">Çözüm notu</label>
+						<textarea name="Not" id="Not" class="form-control" rows="3"
+						          placeholder="Ne yapıldı, tekrar etmemesi için ne değişti?"></textarea>
+					</div>
+					<button type="submit" class="btn btn-success">
+						<i class="bi bi-check2 me-1"></i>Çözüldü olarak işaretle
+					</button>
+				}
+				else
+				{
+					<button type="submit" class="btn btn-outline-secondary">
+						<i class="bi bi-arrow-counterclockwise me-1"></i>Yeniden aç
+					</button>
+				}
+			</form>
+		</div>
+	</div>
+
+	<a asp-action="Index" class="btn btn-secondary mb-4">Listeye Dön</a>
+</div>

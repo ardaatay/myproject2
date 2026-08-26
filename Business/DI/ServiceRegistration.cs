@@ -1,8 +1,8 @@
 ﻿using Business.Interceptors;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Http;
 using Business.Abstract;
+using Core.Logging;
 
 namespace Business.DI;
 
@@ -18,11 +18,11 @@ public static class ServiceRegistration
             var proxyGenerator = new ProxyGenerator();
             var actual = serviceProvider.GetRequiredService<TImplementation>();
             var logService = serviceProvider.GetRequiredService<ILogService>();
-            var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
+            var istekBaglami = serviceProvider.GetRequiredService<IIstekBaglami>();
             
             var interceptors = new IInterceptor[]
             {
-                new LogInterceptor(logService, httpContextAccessor),
+                new LogInterceptor(logService, istekBaglami),
                 new ExceptionInterceptor()
             };
             

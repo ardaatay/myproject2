@@ -1,6 +1,8 @@
 using Business.Abstract;
 using Business.Concrete;
 using Business.DI;
+using Business.Logging;
+using Core.Logging;
 using Core.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +14,9 @@ public static class BusinessExtensions
     public static IServiceCollection AddBusinessExt(this IServiceCollection services)
     {
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+        // Log kayıtlarının ortak alanları (kiracı, kullanıcı, istek) tek yerden okunur.
+        services.AddScoped<IIstekBaglami, IstekBaglami>();
 
         services.AddProxiedScoped<IAgveSistemService, AgveSistemManager>();
         services.AddProxiedScoped<IAnahtarSorumlusuService, AnahtarSorumlusuManager>();
@@ -55,9 +60,12 @@ public static class BusinessExtensions
         services.AddProxiedScoped<IKurumService, KurumManager>();
         services.AddProxiedScoped<IBirimService, BirimManager>();
 
-        // Kimlik doğrulama, aspect proxy'si olmadan kaydedilir: giriş denemeleri
-        // düz metin şifre taşıdığı için LogAspect'in parametreleri kaydetmesi istenmez.
+        // Kimlik doğrulama ve dizin servisleri aspect proxy'si olmadan kaydedilir:
+        // giriş denemeleri ve dizin servis hesabı bilgileri düz metin şifre taşır,
+        // LogAspect'in bu parametreleri kaydetmesi istenmez.
         services.AddSingleton<ISifreKoruyucu, SifreKoruyucu>();
+        services.AddScoped<IActiveDirectoryService, ActiveDirectoryManager>();
+        services.AddScoped<IActiveDirectoryAyarService, ActiveDirectoryAyarManager>();
         services.AddScoped<IKimlikDogrulamaService, KimlikDogrulamaManager>();
 
         return services;

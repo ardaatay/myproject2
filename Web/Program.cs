@@ -57,6 +57,9 @@ builder.Services.AddBusinessExt();
 builder.Services.AddSingleton<KullaniciIstatistikService>();
 builder.Services.AddScoped<IAktifOrganizasyon, AktifOrganizasyon>();
 
+// Dizin servis hesabının şifresi gibi geri döndürülebilir gizli değerler için.
+builder.Services.AddSingleton<IGizliVeriKoruyucu, DataProtectionGizliVeriKoruyucu>();
+
 builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile(typeof(MappingProfile));

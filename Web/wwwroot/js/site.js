@@ -279,10 +279,17 @@ $(function () {
         return el && el.value ? el.value.trim() : '';
     }
 
+    function metniKacir(metin) {
+        var kutu = document.createElement("div");
+        kutu.textContent = metin == null ? "" : metin;
+        return kutu.innerHTML;
+    }
+
     if (typeof Swal !== 'undefined') {
         var basari = deger('successMessage');
         var hata = deger('errorMessage');
         var kod = deger('errorStatusCode');
+        var referans = deger("errorReferans");
 
         if (basari) {
             Swal.fire({
@@ -293,11 +300,24 @@ $(function () {
                 showConfirmButton: false
             });
         } else if (hata) {
+            // Hata kodu, kullanıcının yöneticiye iletebileceği tek tutamak:
+            // seçilebilir biçimde gösterilir ve tek tıkla kopyalanır.
             Swal.fire({
-                title: 'Hata' + (kod ? ' (' + kod + ')' : ''),
-                text: hata,
-                icon: 'error',
-                confirmButtonText: 'Tamam'
+                title: "Hata" + (kod ? " (" + kod + ")" : ""),
+                html: metniKacir(hata) + (referans
+                    ? "<div style=\"margin-top:14px;font-size:13px\">Hata kodu:<br>" +
+                      "<code id=\"hataReferansKodu\" style=\"font-size:15px;user-select:all\">" +
+                      metniKacir(referans) + "</code>" +
+                      "<div style=\"margin-top:6px;color:#888\">Yöneticinize bu kodu iletin.</div></div>"
+                    : ""),
+                icon: "error",
+                showCancelButton: !!referans,
+                cancelButtonText: "Kodu kopyala",
+                confirmButtonText: "Tamam"
+            }).then(function (sonuc) {
+                if (sonuc.dismiss === Swal.DismissReason.cancel && referans && navigator.clipboard) {
+                    navigator.clipboard.writeText(referans);
+                }
             });
         }
     }

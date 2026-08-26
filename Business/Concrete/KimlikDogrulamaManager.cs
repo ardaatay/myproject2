@@ -1,7 +1,9 @@
 using AutoMapper;
 using Business.Abstract;
 using Core.Security;
+using Dto.ActiveDirectory;
 using Dto.Kullanici;
+using Dto.Kullanici.Enum;
 using Entity.Concrete;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -13,6 +15,8 @@ namespace Business.Concrete;
 public class KimlikDogrulamaManager(
     VarlikEnvanteriDbContext context,
     ISifreKoruyucu sifreKoruyucu,
+    IActiveDirectoryService activeDirectoryService,
+    IActiveDirectoryAyarService activeDirectoryAyarService,
     IOptions<SifrePolitikasi> sifrePolitikasi,
     IMapper mapper) : IKimlikDogrulamaService
 {
@@ -50,19 +54,22 @@ public class KimlikDogrulamaManager(
                 Mesaj = "Hesabınız pasif durumda. Lütfen sistem yöneticinizle iletişime geçin."
             };
 
-        if (string.IsNullOrEmpty(kullanici.PasswordHash))
-            return new GirisSonucu
-            {
-                Durum = GirisDurumu.SifreBelirlenmemis,
-                Mesaj = "Hesabınız için henüz şifre belirlenmemiş. Lütfen sistem yöneticinizle iletişime geçin."
-            };
+        // Kimlik, kullanıcının giriş yöntemine göre ya yerel karmayla ya da
+        // dizine bağlanarak doğrulanır. İkisinin de ardından gelen roller,
+        // birim ve oturum kuralları ortaktır.
+        var dogrulama = kullanici.GirisYontemi == GirisYontemi.ActiveDirectory
+            ? await DizinUzerindenDogrulaAsync(kullanici, sifre)
+            : YerelOlarakDogrula(kullanici, sifre);
 
-        var dogrulama = sifreKoruyucu.Dogrula(kullanici.PasswordHash, sifre);
-
-        if (dogrulama == SifreDogrulamaSonucu.Basarisiz)
+        if (dogrulama is not null)
         {
-            await BasarisizDenemeKaydetAsync(kullanici);
-            return new GirisSonucu { Durum = GirisDurumu.HataliKimlik, Mesaj = GenelHataMesaji };
+            // Sayaç yalnızca kimlik hatalarında işler: dizin tarafındaki hesap
+            // kısıtları ya da erişilemeyen sunucu, kullanıcının denemesinin
+            // hatalı olduğu anlamına gelmez.
+            if (dogrulama.Durum == GirisDurumu.HataliKimlik)
+                await BasarisizDenemeKaydetAsync(kullanici);
+
+            return dogrulama;
         }
 
         var roller = kullanici.KullaniciRoller
@@ -78,10 +85,6 @@ public class KimlikDogrulamaManager(
                 Mesaj = "Kullanıcınıza rol tanımlaması yapılmalıdır. Lütfen sistem yöneticinizle iletişime geçin."
             };
 
-        // Karma eski parametrelerle üretilmişse, düz metin hâlâ elimizdeyken yenilenir.
-        if (dogrulama == SifreDogrulamaSonucu.BasariliYenilenmeli)
-            kullanici.PasswordHash = sifreKoruyucu.Karmala(sifre);
-
         kullanici.BasarisizGirisSayisi = 0;
         kullanici.KilitBitisTarihi = null;
         kullanici.SonGirisTarihi = DateTime.Now;
@@ -94,9 +97,98 @@ public class KimlikDogrulamaManager(
             Durum = GirisDurumu.Basarili,
             Kullanici = mapper.Map<ListKullaniciDto>(kullanici),
             Roller = roller,
-            SifreDegistirmeliMi = kullanici.SifreDegistirmeliMi,
+            // Dizine bağlı hesapların şifresi uygulamada tutulmadığı için
+            // uygulama içi şifre değiştirme akışı çalıştırılmaz.
+            SifreDegistirmeliMi = kullanici.GirisYontemi == GirisYontemi.Yerel && kullanici.SifreDegistirmeliMi,
             SecurityStamp = kullanici.SecurityStamp
         };
+    }
+
+    /// <summary>
+    /// Yerel şifre doğrulaması. Başarılıysa <c>null</c>, aksi halde çağırana
+    /// döndürülecek hatayı verir.
+    /// </summary>
+    private GirisSonucu? YerelOlarakDogrula(Kullanici kullanici, string sifre)
+    {
+        if (string.IsNullOrEmpty(kullanici.PasswordHash))
+            return new GirisSonucu
+            {
+                Durum = GirisDurumu.SifreBelirlenmemis,
+                Mesaj = "Hesabınız için henüz şifre belirlenmemiş. Lütfen sistem yöneticinizle iletişime geçin."
+            };
+
+        var dogrulama = sifreKoruyucu.Dogrula(kullanici.PasswordHash, sifre);
+
+        if (dogrulama == SifreDogrulamaSonucu.Basarisiz)
+            return new GirisSonucu { Durum = GirisDurumu.HataliKimlik, Mesaj = GenelHataMesaji };
+
+        // Karma eski parametrelerle üretilmişse, düz metin hâlâ elimizdeyken yenilenir.
+        if (dogrulama == SifreDogrulamaSonucu.BasariliYenilenmeli)
+            kullanici.PasswordHash = sifreKoruyucu.Karmala(sifre);
+
+        return null;
+    }
+
+    /// <summary>
+    /// Active Directory doğrulaması. Başarılıysa <c>null</c> döner ve —
+    /// yapılandırma izin veriyorsa — profil alanları dizinden tazelenir.
+    /// </summary>
+    private async Task<GirisSonucu?> DizinUzerindenDogrulaAsync(Kullanici kullanici, string sifre)
+    {
+        var ayar = await activeDirectoryAyarService.BaglantiAyariGetirAsync(kullanici.OrganizasyonId);
+
+        if (ayar is null || !ayar.Aktif || !ayar.Yapilandirilmis)
+            return new GirisSonucu
+            {
+                Durum = GirisDurumu.DizinYapilandirilmamis,
+                Mesaj = "Hesabınız Active Directory üzerinden doğrulanıyor ancak dizin bağlantısı " +
+                        "yapılandırılmamış. Lütfen sistem yöneticinizle iletişime geçin."
+            };
+
+        var sonuc = await activeDirectoryService.DogrulaAsync(ayar, kullanici.DizinKullaniciAdi, sifre);
+
+        switch (sonuc.Durum)
+        {
+            case AdDogrulamaDurumu.Basarili:
+                break;
+
+            case AdDogrulamaDurumu.HataliKimlik:
+                return new GirisSonucu { Durum = GirisDurumu.HataliKimlik, Mesaj = GenelHataMesaji };
+
+            case AdDogrulamaDurumu.HesapKullanilamaz:
+            case AdDogrulamaDurumu.GrupUyeligiYok:
+                // Kimlik doğru ama dizin girişe izin vermiyor. Yanlış şifre
+                // sayacı işletilmez; sorun kullanıcının denemesinde değil.
+                return new GirisSonucu
+                {
+                    Durum = GirisDurumu.DizinErisimHatasi,
+                    Mesaj = "Hesabınız Active Directory üzerinde giriş için uygun durumda değil. " +
+                            "Lütfen sistem yöneticinizle iletişime geçin."
+                };
+
+            default:
+                return new GirisSonucu
+                {
+                    Durum = GirisDurumu.DizinYapilandirilmamis,
+                    Mesaj = "Active Directory sunucusuna ulaşılamadı. Lütfen daha sonra tekrar deneyin."
+                };
+        }
+
+        if (ayar.ProfilBilgileriniGuncelle && sonuc.Kullanici is { } dizinBilgisi)
+        {
+            if (!string.IsNullOrWhiteSpace(dizinBilgisi.AdSoyad))
+                kullanici.AdSoyad = dizinBilgisi.AdSoyad;
+
+            if (!string.IsNullOrWhiteSpace(dizinBilgisi.Eposta))
+                kullanici.Eposta = dizinBilgisi.Eposta;
+        }
+
+        // Yöntem yerelden dizine çevrildiyse eski karma artık geçersizdir;
+        // uygulamada dizin hesabına ait bir şifre kalmamalıdır.
+        kullanici.PasswordHash = null;
+        kullanici.SifreDegistirmeliMi = false;
+
+        return null;
     }
 
     public async Task<(bool Basarili, IReadOnlyList<string> Hatalar, string? YeniSecurityStamp)> SifreDegistirAsync(
@@ -109,6 +201,15 @@ public class KimlikDogrulamaManager(
 
         if (kullanici is null)
             return (false, new[] { "Kullanıcı bulunamadı." }, null);
+
+        if (kullanici.GirisYontemi == GirisYontemi.ActiveDirectory)
+        {
+            return (false, new[]
+            {
+                "Şifreniz Active Directory üzerinde yönetiliyor. " +
+                "Değiştirmek için kurumsal oturum açma araçlarınızı kullanın."
+            }, null);
+        }
 
         if (mevcutSifreDogrulansin &&
             sifreKoruyucu.Dogrula(kullanici.PasswordHash, mevcutSifre ?? "") == SifreDogrulamaSonucu.Basarisiz)
@@ -147,12 +248,20 @@ public class KimlikDogrulamaManager(
         return kayitli is not null && kayitli == securityStamp;
     }
 
-    public async Task<string?> SifreSifirlaAsync(int kullaniciId)
+    public async Task<SifreSifirlamaSonucu> SifreSifirlaAsync(int kullaniciId)
     {
         var kullanici = await context.Kullanicilar.FirstOrDefaultAsync(k => k.Id == kullaniciId);
 
         if (kullanici is null)
-            return null;
+            return SifreSifirlamaSonucu.Basarisiz("Kullanıcı bulunamadı.");
+
+        // Dizine bağlı hesabın şifresi uygulamada tutulmadığı için sıfırlanamaz;
+        // bu işlem Active Directory tarafında yapılmalıdır.
+        if (kullanici.GirisYontemi == GirisYontemi.ActiveDirectory)
+        {
+            return SifreSifirlamaSonucu.Basarisiz(
+                "Bu hesabın şifresi Active Directory üzerinde yönetiliyor ve buradan sıfırlanamaz.");
+        }
 
         var yeniSifre = GeciciSifreUret();
 
@@ -167,7 +276,7 @@ public class KimlikDogrulamaManager(
 
         await context.SaveChangesAsync();
 
-        return yeniSifre;
+        return SifreSifirlamaSonucu.Olustu(yeniSifre);
     }
 
     /// <summary>

@@ -1,0 +1,344 @@
+@model Dto.ActiveDirectory.ActiveDirectoryAyarDto
+
+@{
+	ViewData["Title"] = "Active Directory";
+	var dizinKullanicisi = (int)(ViewBag.DizinKullanicisiSayisi ?? 0);
+}
+
+<div class="container-fluid">
+	<h1 class="mt-4">Active Directory Ayarları</h1>
+	<p class="text-muted">
+		Buradaki ayarlar yalnızca bağlantıyı tanımlar. Bir kullanıcının dizin üzerinden mi yoksa
+		yerel şifreyle mi giriş yapacağı, <a asp-controller="Kullanicilar" asp-action="Index">Kullanıcılar</a>
+		ekranında kullanıcı bazında seçilir.
+	</p>
+
+	@if (Model.ServisSifresiCozulemedi)
+	{
+		<div class="alert alert-warning">
+			<i class="bi bi-exclamation-triangle me-1"></i>
+			Kayıtlı servis hesabı şifresi çözülemedi. Bu, veri koruma anahtarlarının yenilenmesinden
+			kaynaklanır. Şifreyi yeniden girip kaydedin.
+		</div>
+	}
+
+	@if (!Model.Aktif && dizinKullanicisi > 0)
+	{
+		<div class="alert alert-warning">
+			<i class="bi bi-exclamation-triangle me-1"></i>
+			Dizin girişi kapalı ancak <strong>@dizinKullanicisi</strong> kullanıcı Active Directory
+			üzerinden giriş yapacak şekilde tanımlı. Bu kullanıcılar sisteme giremez.
+		</div>
+	}
+
+	<form asp-action="Index" method="post" id="adFormu">
+		<input type="hidden" asp-for="Id"/>
+
+		<div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 px-3 small"></div>
+
+		<div class="card mb-4">
+			<div class="card-header">Bağlantı</div>
+			<div class="card-body">
+				<div class="form-check form-switch mb-3">
+					<input asp-for="Aktif" class="form-check-input" role="switch"/>
+					<label asp-for="Aktif" class="form-check-label"></label>
+					<div class="form-text">
+						Kapalıyken, giriş yöntemi Active Directory olan hiçbir kullanıcı giriş yapamaz.
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col-md-8 mb-3">
+						<label asp-for="Sunucu" class="form-label"></label>
+						<input asp-for="Sunucu" class="form-control" placeholder="dc01.kurum.local"/>
+						<div class="form-text">Etki alanı denetleyicisinin adı veya IP adresi.</div>
+						<span asp-validation-for="Sunucu" class="text-danger small"></span>
+					</div>
+
+					<div class="col-md-4 mb-3">
+						<label asp-for="Port" class="form-label"></label>
+						<input asp-for="Port" type="number" class="form-control" id="portAlani"/>
+						<div class="form-text">LDAP için 389, LDAPS için 636.</div>
+						<span asp-validation-for="Port" class="text-danger small"></span>
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col-md-4">
+						<div class="form-check mb-2">
+							<input asp-for="SslKullan" class="form-check-input" id="sslKullan"/>
+							<label asp-for="SslKullan" class="form-check-label"></label>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="form-check mb-2">
+							<input asp-for="StartTlsKullan" class="form-check-input" id="startTls"/>
+							<label asp-for="StartTlsKullan" class="form-check-label"></label>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="form-check mb-2">
+							<input asp-for="SertifikaDogrulamasiAtla" class="form-check-input"/>
+							<label asp-for="SertifikaDogrulamasiAtla" class="form-check-label"></label>
+						</div>
+					</div>
+				</div>
+
+				<div class="alert alert-secondary small mb-0 mt-2">
+					Şifreler bağlantı üzerinden gönderildiği için LDAPS ya da StartTLS kullanılması
+					önerilir. Sertifika doğrulamasını atlamak, araya girme saldırılarına açık hale
+					getirir; yalnızca kurum içi sertifika otoritesinin tanınmadığı kapalı ağlarda
+					geçici olarak kullanılmalıdır.
+				</div>
+			</div>
+		</div>
+
+		<div class="card mb-4">
+			<div class="card-header">Etki alanı</div>
+			<div class="card-body">
+				<div class="row">
+					<div class="col-md-6 mb-3">
+						<label asp-for="AlanAdi" class="form-label"></label>
+						<input asp-for="AlanAdi" class="form-control" placeholder="kurum.local"/>
+						<div class="form-text">
+							Kullanıcı adı buna eklenerek <code>kullanici@kurum.local</code> biçiminde gönderilir.
+						</div>
+						<span asp-validation-for="AlanAdi" class="text-danger small"></span>
+					</div>
+
+					<div class="col-md-6 mb-3">
+						<label asp-for="NetBiosAdi" class="form-label"></label>
+						<input asp-for="NetBiosAdi" class="form-control" placeholder="KURUM"/>
+						<div class="form-text">
+							Alan adı girilmediğinde <code>KURUM\kullanici</code> biçimi kullanılır.
+						</div>
+						<span asp-validation-for="NetBiosAdi" class="text-danger small"></span>
+					</div>
+
+					<div class="col-12 mb-3">
+						<label asp-for="TabanDn" class="form-label"></label>
+						<input asp-for="TabanDn" class="form-control" placeholder="DC=kurum,DC=local"/>
+						<div class="form-text">
+							Aramaların başladığı düğüm. Profil güncellemesi ve zorunlu grup denetimi için gereklidir.
+						</div>
+						<span asp-validation-for="TabanDn" class="text-danger small"></span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card mb-4">
+			<div class="card-header">Servis hesabı</div>
+			<div class="card-body">
+				<p class="text-muted small">
+					Dizinde arama yapmak için kullanılır. Boş bırakılırsa arama, giriş yapan kullanıcının
+					kendi kimliğiyle denenir. Yalnızca okuma yetkisi olan bir hesap yeterlidir.
+				</p>
+
+				<div class="row">
+					<div class="col-md-6 mb-3">
+						<label asp-for="ServisHesabi" class="form-label"></label>
+						<input asp-for="ServisHesabi" class="form-control" autocomplete="off"
+						       placeholder="ldap-okuyucu"/>
+						<span asp-validation-for="ServisHesabi" class="text-danger small"></span>
+					</div>
+
+					<div class="col-md-6 mb-3">
+						<label asp-for="ServisHesabiSifresi" class="form-label"></label>
+						<input asp-for="ServisHesabiSifresi" type="password" class="form-control"
+						       autocomplete="new-password" value=""/>
+						<div class="form-text">
+							@if (Model.ServisSifresiKayitli)
+							{
+								<span><i class="bi bi-key me-1"></i>Kayıtlı bir şifre var. Boş bırakırsanız değişmez.</span>
+							}
+							else
+							{
+								<span>Şifre şifrelenerek saklanır; ekranda hiçbir zaman geri gösterilmez.</span>
+							}
+						</div>
+						<span asp-validation-for="ServisHesabiSifresi" class="text-danger small"></span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card mb-4">
+			<div class="card-header">Arama ve öznitelikler</div>
+			<div class="card-body">
+				<div class="row">
+					<div class="col-12 mb-3">
+						<label asp-for="KullaniciAramaFiltresi" class="form-label"></label>
+						<input asp-for="KullaniciAramaFiltresi" class="form-control font-monospace"/>
+						<div class="form-text">
+							Kullanıcı adı <code>{0}</code> yerine yerleştirilir.
+						</div>
+						<span asp-validation-for="KullaniciAramaFiltresi" class="text-danger small"></span>
+					</div>
+
+					<div class="col-md-4 mb-3">
+						<label asp-for="KullaniciAdiOzniteligi" class="form-label"></label>
+						<input asp-for="KullaniciAdiOzniteligi" class="form-control"/>
+						<span asp-validation-for="KullaniciAdiOzniteligi" class="text-danger small"></span>
+					</div>
+
+					<div class="col-md-4 mb-3">
+						<label asp-for="AdSoyadOzniteligi" class="form-label"></label>
+						<input asp-for="AdSoyadOzniteligi" class="form-control"/>
+						<span asp-validation-for="AdSoyadOzniteligi" class="text-danger small"></span>
+					</div>
+
+					<div class="col-md-4 mb-3">
+						<label asp-for="EpostaOzniteligi" class="form-label"></label>
+						<input asp-for="EpostaOzniteligi" class="form-control"/>
+						<span asp-validation-for="EpostaOzniteligi" class="text-danger small"></span>
+					</div>
+
+					<div class="col-md-8 mb-3">
+						<label asp-for="ZorunluGrupDn" class="form-label"></label>
+						<input asp-for="ZorunluGrupDn" class="form-control"
+						       placeholder="CN=EnvanterKullanicilari,OU=Gruplar,DC=kurum,DC=local"/>
+						<div class="form-text">
+							Doluysa yalnızca bu grubun üyeleri giriş yapabilir. İç içe gruplar da sayılır.
+							Üyelik doğrulanamazsa giriş reddedilir.
+						</div>
+						<span asp-validation-for="ZorunluGrupDn" class="text-danger small"></span>
+					</div>
+
+					<div class="col-md-4 mb-3">
+						<label asp-for="ZamanAsimiSn" class="form-label"></label>
+						<input asp-for="ZamanAsimiSn" type="number" class="form-control"/>
+						<span asp-validation-for="ZamanAsimiSn" class="text-danger small"></span>
+					</div>
+				</div>
+
+				<div class="form-check">
+					<input asp-for="ProfilBilgileriniGuncelle" class="form-check-input"/>
+					<label asp-for="ProfilBilgileriniGuncelle" class="form-check-label"></label>
+					<div class="form-text">Her başarılı girişte kullanıcının adı ve e-postası dizinden tazelenir.</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card mb-4">
+			<div class="card-header">Bağlantıyı sına</div>
+			<div class="card-body">
+				<p class="text-muted small">
+					Sınama, formdaki güncel değerlerle çalışır; kaydetmeden önce de kullanılabilir.
+					Test kullanıcısı girilirse gerçek giriş akışının aynısı (filtre ve grup denetimi dahil)
+					çalıştırılır. Girilen test şifresi hiçbir yere kaydedilmez.
+				</p>
+
+				<div class="row">
+					<div class="col-md-4 mb-3">
+						<label for="testKullaniciAdi" class="form-label">Test kullanıcı adı</label>
+						<input type="text" id="testKullaniciAdi" class="form-control" autocomplete="off"/>
+					</div>
+					<div class="col-md-4 mb-3">
+						<label for="testSifre" class="form-label">Test şifresi</label>
+						<input type="password" id="testSifre" class="form-control" autocomplete="new-password"/>
+					</div>
+					<div class="col-md-4 mb-3 d-flex align-items-end">
+						<button type="button" class="btn btn-outline-primary w-100" id="sinaDugmesi">
+							<i class="bi bi-plug me-1"></i>Bağlantıyı sına
+						</button>
+					</div>
+				</div>
+
+				<div id="sinamaSonucu" class="d-none"></div>
+			</div>
+		</div>
+
+		<button type="submit" class="btn btn-primary">Kaydet</button>
+		<a asp-controller="Kullanicilar" asp-action="Index" class="btn btn-secondary">Kullanıcılara Dön</a>
+	</form>
+</div>
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial"/>
+
+	<script>
+		// LDAPS seçilince beklenen porta geçilir; yönetici elle değiştirmişse
+		// (varsayılanların dışında bir değer) dokunulmaz.
+		document.getElementById('sslKullan').addEventListener('change', function () {
+			const port = document.getElementById('portAlani');
+			if (port.value === '389' || port.value === '636' || port.value === '') {
+				port.value = this.checked ? '636' : '389';
+			}
+			if (this.checked) {
+				document.getElementById('startTls').checked = false;
+			}
+		});
+
+		document.getElementById('startTls').addEventListener('change', function () {
+			if (this.checked) {
+				document.getElementById('sslKullan').checked = false;
+			}
+		});
+
+		document.getElementById('sinaDugmesi').addEventListener('click', async function () {
+			const dugme = this;
+			const kutu = document.getElementById('sinamaSonucu');
+			const form = document.getElementById('adFormu');
+
+			dugme.disabled = true;
+			dugme.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sınanıyor…';
+
+			kutu.className = 'alert alert-secondary';
+			kutu.textContent = 'Dizine bağlanılıyor…';
+
+			try {
+				const veri = new FormData(form);
+
+				// Sınama alanları formun bir parçası değil: kaydetme isteğinde
+				// sunucuya test şifresi gönderilmesin diye yalnızca burada eklenir.
+				veri.append("testKullaniciAdi", document.getElementById("testKullaniciAdi").value);
+				veri.append("testSifre", document.getElementById("testSifre").value);
+				const yanit = await fetch('@Url.Action("Test", "ActiveDirectory")', {
+					method: 'POST',
+					body: veri
+				});
+
+				if (!yanit.ok) {
+					throw new Error('Sunucu ' + yanit.status + ' döndü.');
+				}
+
+				const sonuc = await yanit.json();
+				kutu.className = sonuc.basarili ? 'alert alert-success' : 'alert alert-danger';
+
+				let icerik = '<div>' + escapeHtml(sonuc.mesaj) + '</div>';
+
+				if (sonuc.basarili && (sonuc.adSoyad || sonuc.eposta || sonuc.dn)) {
+					icerik += '<hr class="my-2"><dl class="row mb-0 small">';
+					if (sonuc.kullaniciAdi) {
+						icerik += '<dt class="col-sm-3">Kullanıcı adı</dt><dd class="col-sm-9">' + escapeHtml(sonuc.kullaniciAdi) + '</dd>';
+					}
+					if (sonuc.adSoyad) {
+						icerik += '<dt class="col-sm-3">Ad soyad</dt><dd class="col-sm-9">' + escapeHtml(sonuc.adSoyad) + '</dd>';
+					}
+					if (sonuc.eposta) {
+						icerik += '<dt class="col-sm-3">E-posta</dt><dd class="col-sm-9">' + escapeHtml(sonuc.eposta) + '</dd>';
+					}
+					if (sonuc.dn) {
+						icerik += '<dt class="col-sm-3">DN</dt><dd class="col-sm-9 font-monospace">' + escapeHtml(sonuc.dn) + '</dd>';
+					}
+					icerik += '</dl>';
+				}
+
+				kutu.innerHTML = icerik;
+			} catch (hata) {
+				kutu.className = 'alert alert-danger';
+				kutu.textContent = 'Sınama yapılamadı: ' + hata.message;
+			} finally {
+				dugme.disabled = false;
+				dugme.innerHTML = '<i class="bi bi-plug me-1"></i>Bağlantıyı sına';
+			}
+		});
+
+		function escapeHtml(metin) {
+			const kutu = document.createElement('div');
+			kutu.textContent = metin ?? '';
+			return kutu.innerHTML;
+		}
+	</script>
+}

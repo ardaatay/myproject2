@@ -25,9 +25,20 @@ WORKDIR /app
 #   Kütüphane yoksa şifre doğrulamasına düşer ama her başlangıçta stderr'e hata basar.
 # curl: .NET çalışma zamanı imajında hiçbir HTTP istemcisi yoktur; sağlık
 #   kontrolünün /health ucunu çağırabilmesi için gereklidir.
+# libldap: Active Directory doğrulaması OpenLDAP istemcisini çalışma zamanında
+#   yükler. .NET kütüphaneyi "libldap.so.2" adıyla arar; Debian sürümüne göre
+#   paket adı değiştiği için ikisi de denenir, eski adlandırmada beklenen ada
+#   bir bağlantı kurulur. Kütüphane yoksa dizin girişi çalışmaz, uygulamanın
+#   geri kalanı etkilenmez.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libgssapi-krb5-2 curl \
-    && rm -rf /var/lib/apt/lists/*
+    && (apt-get install -y --no-install-recommends libldap2 \
+        || apt-get install -y --no-install-recommends libldap-2.5-0) \
+    && rm -rf /var/lib/apt/lists/* \
+    && if ! ldconfig -p | grep -q 'libldap\.so\.2'; then \
+           eski=$(ldconfig -p | grep -oE '/usr/lib/[^ ]*/libldap-[0-9.]+\.so\.[0-9]+' | head -1); \
+           if [ -n "$eski" ]; then ln -sf "$eski" "$(dirname "$eski")/libldap.so.2"; ldconfig; fi; \
+       fi
 
 COPY --from=build /app/publish .
 

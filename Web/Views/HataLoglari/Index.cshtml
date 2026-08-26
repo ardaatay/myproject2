@@ -1,0 +1,208 @@
+@model Dto.Loglar.LogFiltreDto
+
+@{
+	ViewData["Title"] = "Hata Logları";
+	var toplam = (int)(ViewBag.Toplam ?? 0);
+	var cozulmemis = (int)(ViewBag.Cozulmemis ?? 0);
+	var sonGun = (int)(ViewBag.SonYirmiDortSaat ?? 0);
+}
+
+<div class="container-fluid">
+	<h1 class="mt-4">Hata Logları</h1>
+
+	<div class="card mb-3 border-primary">
+		<div class="card-body">
+			<form asp-action="Ara" method="get" class="row g-2 align-items-end">
+				<div class="col-md-5">
+					<label for="kod" class="form-label mb-1">
+						<strong>Hata kodu ile ara</strong>
+					</label>
+					<input type="text" id="kod" name="kod" class="form-control font-monospace"
+					       placeholder="HTA-XXXX-XXXX" autofocus/>
+					<div class="form-text">
+						Kullanıcının ilettiği kodu olduğu gibi yapıştırabilirsiniz; büyük/küçük harf,
+						tire ve boşluk farkları göz ardı edilir.
+					</div>
+				</div>
+				<div class="col-md-3">
+					<button type="submit" class="btn btn-primary">
+						<i class="bi bi-search me-1"></i>Kaydı bul
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<div class="row g-3 mb-3">
+		<div class="col-md-4">
+			<div class="card h-100">
+				<div class="card-body">
+					<div class="text-muted small">Toplam hata</div>
+					<div class="fs-3">@toplam</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-4">
+			<div class="card h-100 @(cozulmemis > 0 ? "border-danger" : "")">
+				<div class="card-body">
+					<div class="text-muted small">Açık (çözülmemiş)</div>
+					<div class="fs-3 @(cozulmemis > 0 ? "text-danger" : "")">@cozulmemis</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-4">
+			<div class="card h-100">
+				<div class="card-body">
+					<div class="text-muted small">Son 24 saat</div>
+					<div class="fs-3">@sonGun</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="card mb-3">
+		<div class="card-body">
+			<form id="filtreFormu" onsubmit="return false;">
+				<div class="row g-2 align-items-end">
+					<div class="col-md-2">
+						<label asp-for="Baslangic" class="form-label"></label>
+						<input asp-for="Baslangic" type="date" class="form-control"/>
+					</div>
+					<div class="col-md-2">
+						<label asp-for="Bitis" class="form-label"></label>
+						<input asp-for="Bitis" type="date" class="form-control"/>
+					</div>
+					<div class="col-md-3">
+						<label asp-for="Kullanici" class="form-label"></label>
+						<input asp-for="Kullanici" class="form-control" placeholder="kullanıcı adı"/>
+					</div>
+					<div class="col-md-2">
+						<label asp-for="HataKodu" class="form-label"></label>
+						<input asp-for="HataKodu" class="form-control font-monospace" placeholder="HTA-XXXX-XXXX"/>
+					</div>
+					<div class="col-md-3">
+						<div class="form-check mb-2">
+							<input asp-for="YalnizcaSorunlu" class="form-check-input"/>
+							<label asp-for="YalnizcaSorunlu" class="form-check-label">Yalnızca açık kayıtlar</label>
+						</div>
+						<button type="button" class="btn btn-primary btn-sm" id="uygulaDugmesi">
+							<i class="bi bi-funnel me-1"></i>Uygula
+						</button>
+						<button type="button" class="btn btn-outline-secondary btn-sm" id="temizleDugmesi">Temizle</button>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<div class="card mb-4">
+		<div class="card-body">
+			<div class="table-responsive">
+				<table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+					<thead>
+					<tr>
+						<th>Kod</th>
+						<th>Tarih</th>
+						<th>Tür</th>
+						<th>Mesaj</th>
+						<th>HTTP</th>
+						<th>Kullanıcı</th>
+						<th>Durum</th>
+						<th>Ayrıntı</th>
+					</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	<script>
+		$(document).ready(function () {
+			const detayUrl = '@Url.Action("Detay", "HataLoglari")';
+
+			function alan(id) {
+				const el = document.getElementById(id);
+				return el ? el.value : '';
+			}
+
+			const table = $('#dataTable').DataTable({
+				processing: true,
+				serverSide: true,
+				ordering: true,
+				order: [],
+				searching: true,
+				ajax: {
+					url: '@Url.Action("Liste", "HataLoglari")',
+					type: 'POST',
+					data: function (d) {
+						d.Baslangic = alan('Baslangic');
+						d.Bitis = alan('Bitis');
+						d.Kullanici = alan('Kullanici');
+						d.HataKodu = alan('HataKodu');
+						d.YalnizcaSorunlu = document.getElementById('YalnizcaSorunlu').checked;
+					}
+				},
+				language: {url: '/js/datatables-tr.json'},
+				columns: [
+					{
+						data: 'kod',
+						render: function (data, type, row) {
+							if (type !== 'display') return data;
+							return `<a href="${detayUrl}/${row.id}" class="font-monospace">${data}</a>`;
+						}
+					},
+					{
+						data: 'tarih',
+						render: function (data, type) {
+							if (type !== 'display' || !data) return data;
+							return new Date(data).toLocaleString('tr-TR');
+						}
+					},
+					{data: 'tur'},
+					{
+						data: 'mesaj',
+						render: function (data, type) {
+							if (type !== 'display' || !data) return data ?? '';
+							// Uzun mesajlar tabloyu bozmasın; tamamı ayrıntı sayfasında.
+							const kisa = data.length > 90 ? data.substring(0, 90) + '…' : data;
+							return `<span title="${$('<div>').text(data).html()}">${$('<div>').text(kisa).html()}</span>`;
+						}
+					},
+					{data: 'durumKodu'},
+					{data: 'kullanici', defaultContent: ''},
+					{
+						data: 'durumStr',
+						render: function (data, type, row) {
+							if (type !== 'display') return data;
+							const rozet = row.cozuldu ? 'bg-success' : 'bg-danger';
+							return `<span class="badge ${rozet}">${data}</span>`;
+						}
+					},
+					{
+						data: 'id',
+						orderable: false,
+						render: function (data) {
+							return `<a href="${detayUrl}/${data}" class="btn btn-secondary btn-sm" title="Ayrıntı"><i class="bi bi-search"></i></a>`;
+						}
+					}
+				],
+				bAutoWidth: false
+			});
+
+			document.getElementById('uygulaDugmesi').addEventListener('click', function () {
+				table.ajax.reload();
+			});
+
+			document.getElementById('temizleDugmesi').addEventListener('click', function () {
+				document.getElementById('filtreFormu').reset();
+				['Baslangic', 'Bitis', 'Kullanici', 'HataKodu'].forEach(function (id) {
+					document.getElementById(id).value = '';
+				});
+				document.getElementById('YalnizcaSorunlu').checked = false;
+				table.ajax.reload();
+			});
+		});
+	</script>
+}

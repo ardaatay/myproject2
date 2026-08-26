@@ -7,7 +7,13 @@ public enum GirisDurumu
     Kilitli,
     Pasif,
     SifreBelirlenmemis,
-    RolTanimlanmamis
+    RolTanimlanmamis,
+
+    /// <summary>Kullanıcı dizine bağlı ama dizin ayarları eksik ya da kapalı.</summary>
+    DizinYapilandirilmamis,
+
+    /// <summary>Dizine ulaşılamadı ya da kullanıcı dizindeki erişim koşullarını sağlamıyor.</summary>
+    DizinErisimHatasi
 }
 
 /// <summary>

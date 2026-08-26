@@ -71,12 +71,14 @@ public class VarlikEnvanteriDbContext : DbContext
     public DbSet<Rol> Roller { get; set; }
     public DbSet<KullaniciRol> KullaniciRoller { get; set; }
     public DbSet<Log> Logs { get; set; }
+    public DbSet<HataLog> HataLoglari { get; set; }
     public DbSet<KullaniciBirim> KullaniciBirimler { get; set; }
     public DbSet<GuvenlikModu> GuvenlikModu { get; set; }
     public DbSet<EpostaTalep> EpostaTalepleri { get; set; }
     public DbSet<Kurum> Kurumlar { get; set; }
     public DbSet<Birim> Birimler { get; set; }
     public DbSet<Organizasyon> Organizasyonlar { get; set; }
+    public DbSet<ActiveDirectoryAyari> ActiveDirectoryAyarlari { get; set; }
 
     // View'lar
     public DbSet<ListAgveSistemDto> AgveSistemDetay { get; set; }
@@ -184,6 +186,29 @@ public class VarlikEnvanteriDbContext : DbContext
         // "tasinabilir_cihazve_ortamlar". Bu ikisi okunur biçimde sabitlenir.
         modelBuilder.Entity<IoTCihaz>().ToTable("iot_cihazlari");
         modelBuilder.Entity<TasinabilirCihazveOrtam>().ToTable("tasinabilir_cihaz_ve_ortamlar");
+
+        // Loglar yalnızca zamana göre listelenir ve hata koduyla aranır;
+        // tablo hızla büyüdüğü için bu iki erişim yolu dizinlenir.
+        modelBuilder.Entity<Log>(log =>
+        {
+            log.HasIndex(l => new { l.OrganizasyonId, l.ExecutingTime });
+            log.HasIndex(l => l.HataKodu);
+        });
+
+        modelBuilder.Entity<HataLog>(hata =>
+        {
+            // Kod kullanıcıya verilen tek tutamak: iki kaydın aynı kodu
+            // taşıması aramayı belirsizleştirir.
+            hata.HasIndex(h => h.Kod).IsUnique();
+            hata.HasIndex(h => new { h.OrganizasyonId, h.OlusmaTarihi });
+            hata.HasIndex(h => h.Cozuldu);
+        });
+
+        // Her kiracıda en fazla bir dizin yapılandırması bulunur; giriş akışı
+        // kullanıcının organizasyonundan tek bir kayda ulaşabilmelidir.
+        modelBuilder.Entity<ActiveDirectoryAyari>()
+            .HasIndex(a => a.OrganizasyonId)
+            .IsUnique();
 
         modelBuilder.Entity<Birim>(birim =>
         {

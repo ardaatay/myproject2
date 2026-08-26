@@ -2,6 +2,7 @@ using Business.Abstract;
 using Core.Configuration;
 using Core.Util;
 using Dto.Kullanici;
+using Dto.Kullanici.Enum;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -24,10 +25,18 @@ namespace Web.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult Login(string? returnUrl = null)
+        public IActionResult Login(string? returnUrl = null, string? error = null, string? kod = null)
         {
             if (User.Identity?.IsAuthenticated == true)
                 return RedirectToAction("Index", "Home");
+
+            // Giriş sırasında oluşan bir hatadan geri dönülmüş olabilir; mesaj
+            // ve referans kodu kullanıcıya burada gösterilir.
+            if (!string.IsNullOrWhiteSpace(error))
+            {
+                ModelState.AddModelError(string.Empty, error);
+                ViewBag.HataKodu = kod;
+            }
 
             return View(new GirisDto { ReturnUrl = returnUrl });
         }
@@ -83,7 +92,26 @@ namespace Web.Controllers
 
         [Authorize]
         [HttpGet]
-        public IActionResult SifreDegistir() => View(new SifreDegistirDto());
+        public async Task<IActionResult> SifreDegistir()
+        {
+            var kullaniciId = KullaniciIdAl();
+            if (kullaniciId is null)
+                return RedirectToAction(nameof(Logout));
+
+            // Dizine bağlı hesabın şifresi uygulamada tutulmadığı için burada
+            // değiştirilemez; kullanıcı boş yere form doldurmasın.
+            var kullanici = await kullaniciService.GetByIdAsync(kullaniciId.Value);
+
+            if (kullanici?.GirisYontemi == GirisYontemi.ActiveDirectory)
+            {
+                TempData["ErrorMessage"] =
+                    "Şifreniz Active Directory üzerinde yönetiliyor ve buradan değiştirilemez.";
+
+                return RedirectToAction("Index", "Home");
+            }
+
+            return View(new SifreDegistirDto());
+        }
 
         [Authorize]
         [HttpPost]

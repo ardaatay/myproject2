@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Business.Abstract;
+using Core.Aspects;
 using Core.Exceptions;
 using Dto.AgveSistem;
 using Dto.Kullanici;
@@ -40,6 +41,8 @@ namespace Business.Concrete
             return mapper.Map<List<ListKullaniciRolDto>>(entities);
         }
 
+
+        [LogAspect]
         public async Task<CreateKullaniciRolDto> AddAsync(CreateKullaniciRolDto dto)
         {
             return await unitOfWork.ExecuteInTransactionAsync(async () =>
@@ -52,6 +55,8 @@ namespace Business.Concrete
             });
         }
 
+
+        [LogAspect]
         public async Task<UpdateKullaniciRolDto> UpdateAsync(UpdateKullaniciRolDto dto)
         {
             return await unitOfWork.ExecuteInTransactionAsync(async () =>
@@ -68,6 +73,8 @@ namespace Business.Concrete
             });
         }
 
+
+        [LogAspect]
         public async Task DeleteAsync(int id)
         {
             await unitOfWork.ExecuteInTransactionAsync(async () =>

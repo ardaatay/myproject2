@@ -2,7 +2,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Repository.Context;
@@ -2196,6 +2195,124 @@ namespace Repository.Migrations
                     b.ToView("vw_veritabani_detay", (string)null);
                 });
 
+            modelBuilder.Entity("Entity.Concrete.ActiveDirectoryAyari", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AdSoyadOzniteligi")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("ad_soyad_ozniteligi");
+
+                    b.Property<bool>("Aktif")
+                        .HasColumnType("boolean")
+                        .HasColumnName("aktif");
+
+                    b.Property<string>("AlanAdi")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("alan_adi");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("EpostaOzniteligi")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("eposta_ozniteligi");
+
+                    b.Property<string>("KullaniciAdiOzniteligi")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("kullanici_adi_ozniteligi");
+
+                    b.Property<string>("KullaniciAramaFiltresi")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("kullanici_arama_filtresi");
+
+                    b.Property<string>("NetBiosAdi")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("net_bios_adi");
+
+                    b.Property<int>("OrganizasyonId")
+                        .HasColumnType("integer")
+                        .HasColumnName("organizasyon_id");
+
+                    b.Property<int>("Port")
+                        .HasColumnType("integer")
+                        .HasColumnName("port");
+
+                    b.Property<bool>("ProfilBilgileriniGuncelle")
+                        .HasColumnType("boolean")
+                        .HasColumnName("profil_bilgilerini_guncelle");
+
+                    b.Property<bool>("SertifikaDogrulamasiAtla")
+                        .HasColumnType("boolean")
+                        .HasColumnName("sertifika_dogrulamasi_atla");
+
+                    b.Property<string>("ServisHesabi")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("servis_hesabi");
+
+                    b.Property<string>("ServisHesabiSifresiKorunmus")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("servis_hesabi_sifresi_korunmus");
+
+                    b.Property<bool>("SslKullan")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ssl_kullan");
+
+                    b.Property<bool>("StartTlsKullan")
+                        .HasColumnType("boolean")
+                        .HasColumnName("start_tls_kullan");
+
+                    b.Property<string>("Sunucu")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("sunucu");
+
+                    b.Property<string>("TabanDn")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("taban_dn");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_date");
+
+                    b.Property<int>("ZamanAsimiSn")
+                        .HasColumnType("integer")
+                        .HasColumnName("zaman_asimi_sn");
+
+                    b.Property<string>("ZorunluGrupDn")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("zorunlu_grup_dn");
+
+                    b.HasKey("Id")
+                        .HasName("pk_active_directory_ayarlari");
+
+                    b.HasIndex("OrganizasyonId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_active_directory_ayarlari_organizasyon_id");
+
+                    b.ToTable("active_directory_ayarlari", (string)null);
+                });
+
             modelBuilder.Entity("Entity.Concrete.AgveSistem", b =>
                 {
                     b.Property<int>("Id")
@@ -3683,6 +3800,113 @@ namespace Repository.Migrations
                     b.ToTable("guvenlik_modu", (string)null);
                 });
 
+            modelBuilder.Entity("Entity.Concrete.HataLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Ayrinti")
+                        .HasColumnType("text")
+                        .HasColumnName("ayrinti");
+
+                    b.Property<string>("CozenKullanici")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("cozen_kullanici");
+
+                    b.Property<bool>("Cozuldu")
+                        .HasColumnType("boolean")
+                        .HasColumnName("cozuldu");
+
+                    b.Property<DateTime?>("CozulmeTarihi")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("cozulme_tarihi");
+
+                    b.Property<string>("CozumNotu")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("cozum_notu");
+
+                    b.Property<int>("DurumKodu")
+                        .HasColumnType("integer")
+                        .HasColumnName("durum_kodu");
+
+                    b.Property<string>("HttpYontemi")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("http_yontemi");
+
+                    b.Property<string>("IpAdresi")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)")
+                        .HasColumnName("ip_adresi");
+
+                    b.Property<string>("IstekId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("istek_id");
+
+                    b.Property<string>("Kod")
+                        .IsRequired()
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
+                        .HasColumnName("kod");
+
+                    b.Property<string>("Kullanici")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("kullanici");
+
+                    b.Property<string>("KullaniciMesaji")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("kullanici_mesaji");
+
+                    b.Property<string>("Mesaj")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("mesaj");
+
+                    b.Property<DateTime>("OlusmaTarihi")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("olusma_tarihi");
+
+                    b.Property<int>("OrganizasyonId")
+                        .HasColumnType("integer")
+                        .HasColumnName("organizasyon_id");
+
+                    b.Property<string>("Tur")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("tur");
+
+                    b.Property<string>("Yol")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("yol");
+
+                    b.HasKey("Id")
+                        .HasName("pk_hata_loglari");
+
+                    b.HasIndex("Cozuldu")
+                        .HasDatabaseName("ix_hata_loglari_cozuldu");
+
+                    b.HasIndex("Kod")
+                        .IsUnique()
+                        .HasDatabaseName("ix_hata_loglari_kod");
+
+                    b.HasIndex("OrganizasyonId", "OlusmaTarihi")
+                        .HasDatabaseName("ix_hata_loglari_organizasyon_id_olusma_tarihi");
+
+                    b.ToTable("hata_loglari", (string)null);
+                });
+
             modelBuilder.Entity("Entity.Concrete.IoTCihaz", b =>
                 {
                     b.Property<int>("Id")
@@ -4231,6 +4455,11 @@ namespace Repository.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ActiveDirectoryKullaniciAdi")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("active_directory_kullanici_adi");
+
                     b.Property<string>("AdSoyad")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
@@ -4258,6 +4487,10 @@ namespace Repository.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("eposta");
+
+                    b.Property<int>("GirisYontemi")
+                        .HasColumnType("integer")
+                        .HasColumnName("giris_yontemi");
 
                     b.Property<DateTime?>("KilitBitisTarihi")
                         .HasColumnType("timestamp without time zone")
@@ -4489,6 +4722,10 @@ namespace Repository.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("Basarili")
+                        .HasColumnType("boolean")
+                        .HasColumnName("basarili");
+
                     b.Property<string>("ClassName")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -4503,6 +4740,16 @@ namespace Repository.Migrations
                     b.Property<DateTime>("ExecutingTime")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("executing_time");
+
+                    b.Property<string>("HataKodu")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
+                        .HasColumnName("hata_kodu");
+
+                    b.Property<string>("IpAdresi")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)")
+                        .HasColumnName("ip_adresi");
 
                     b.Property<string>("MethodName")
                         .IsRequired()
@@ -4525,14 +4772,29 @@ namespace Repository.Migrations
                         .HasColumnType("character varying(4000)")
                         .HasColumnName("return_value");
 
+                    b.Property<int>("SureMs")
+                        .HasColumnType("integer")
+                        .HasColumnName("sure_ms");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
                         .HasColumnName("username");
 
+                    b.Property<string>("Yol")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("yol");
+
                     b.HasKey("Id")
                         .HasName("pk_logs");
+
+                    b.HasIndex("HataKodu")
+                        .HasDatabaseName("ix_logs_hata_kodu");
+
+                    b.HasIndex("OrganizasyonId", "ExecutingTime")
+                        .HasDatabaseName("ix_logs_organizasyon_id_executing_time");
 
                     b.ToTable("logs", (string)null);
                 });

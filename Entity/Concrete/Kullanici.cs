@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Core.Entity;
+using Dto.Kullanici.Enum;
 
 namespace Entity.Concrete
 {
@@ -12,13 +13,26 @@ namespace Entity.Concrete
 
         [MaxLength(100)] public string Username { get; set; } = default!;
 
+        /// <summary>
+        /// Kimliğin nerede doğrulanacağı. Kullanıcı bazındadır: aynı kurumda
+        /// yerel hesaplarla dizin hesapları bir arada bulunabilir.
+        /// </summary>
+        public GirisYontemi GirisYontemi { get; set; } = GirisYontemi.Yerel;
+
+        /// <summary>
+        /// Dizindeki hesap adı. Boşsa <see cref="Username"/> kullanılır; yalnızca
+        /// uygulamadaki kullanıcı adı dizindekinden farklıysa doldurulur.
+        /// </summary>
+        [MaxLength(255)] public string? ActiveDirectoryKullaniciAdi { get; set; }
+
         [MaxLength(200)] public string? AdSoyad { get; set; }
 
         [MaxLength(200)] public string? Eposta { get; set; }
 
         /// <summary>
         /// PBKDF2 türevi karma. Boş bırakılırsa kullanıcı henüz şifre belirlememiştir
-        /// ve giriş yapamaz.
+        /// ve giriş yapamaz. Dizine bağlı hesaplarda her zaman boş kalır — dizin
+        /// şifresi uygulamada hiçbir biçimde tutulmaz.
         /// </summary>
         [MaxLength(500)]
         public string? PasswordHash { get; set; }
@@ -47,5 +61,9 @@ namespace Entity.Concrete
         public bool Durum { get; set; }
 
         public ICollection<KullaniciRol> KullaniciRoller { get; set; } = new List<KullaniciRol>();
+
+        /// <summary>Dizinde aranırken kullanılacak hesap adı.</summary>
+        public string DizinKullaniciAdi =>
+            string.IsNullOrWhiteSpace(ActiveDirectoryKullaniciAdi) ? Username : ActiveDirectoryKullaniciAdi;
     }
 }

@@ -337,6 +337,11 @@ public class MappingProfile : Profile
         CreateMap<Kullanici, CreateKullaniciDto>();
         CreateMap<CreateKullaniciDto, Kullanici>()
             .ForMember(dest => dest.Username, src => src.MapFrom(x => x.Username.Trim().ToLower()))
+            // Yerel hesapta dizin adı taşınmaz; alan formda dolu kalmış olsa bile temizlenir.
+            .ForMember(dest => dest.ActiveDirectoryKullaniciAdi, src => src.MapFrom(x =>
+                x.GirisYontemi == Dto.Kullanici.Enum.GirisYontemi.ActiveDirectory
+                    ? x.ActiveDirectoryKullaniciAdi
+                    : null))
             .ForMember(dest => dest.Durum, src => src.MapFrom(x => true));
         CreateMap<Kullanici, UpdateKullaniciDto>();
         CreateMap<UpdateKullaniciDto, Kullanici>()

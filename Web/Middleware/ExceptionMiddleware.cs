@@ -1,3 +1,4 @@
+using Business.Abstract;
 using Core.Exceptions;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.DependencyInjection;
@@ -6,8 +7,19 @@ using Web.Extensions;
 
 namespace Web.Middleware;
 
+/// <summary>
+/// İstisnaları kullanıcıya gösterilebilir bir yanıta çevirir ve her birini
+/// hata koduyla birlikte kalıcı olarak kaydeder.
+///
+/// Kullanıcıya teknik ayrıntı verilmez; verilen tek şey koddur. Yönetici,
+/// **Hata Logları** ekranında bu kodu arayarak mesajın, yığın izinin ve
+/// isteğin tamamına ulaşır.
+/// </summary>
 public class ExceptionMiddleware
 {
+    /// <summary>TempData ve sorgu dizesinde hata kodunu taşıyan anahtar.</summary>
+    public const string KodAnahtari = "ErrorReferans";
+
     private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionMiddleware> _logger;
 
@@ -25,6 +37,7 @@ public class ExceptionMiddleware
 
             if (context.Response is { StatusCode: 404, HasStarted: false })
             {
+                // Var olmayan bir adres uygulama hatası değildir; kayıt açılmaz.
                 context.Response.Redirect($"/Home/Error?message=NotFound&statusCode=404");
             }
         }
@@ -37,13 +50,6 @@ public class ExceptionMiddleware
 
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        // Yanıt başlatılmışsa işlem yapamayız
-        if (context.Response.HasStarted)
-        {
-            _logger.LogWarning("Yanıt zaten başlatılmış, hata işlenemedi");
-            return;
-        }
-
         var statusCode = exception switch
         {
             NotFoundException => StatusCodes.Status404NotFound,
@@ -62,6 +68,17 @@ public class ExceptionMiddleware
             errorMessage = "İşleminiz sırasında beklenmedik bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.";
         }
 
+        // Kayıt, yanıt üretilmeden önce alınır: yanıt yazımı sırasında bir sorun
+        // çıksa bile hata izlenebilir kalmalıdır.
+        var hataKodu = await HataKaydetAsync(context, exception, statusCode, errorMessage);
+
+        // Yanıt başlatılmışsa artık içeriği değiştiremeyiz; kayıt yine de alındı.
+        if (context.Response.HasStarted)
+        {
+            _logger.LogWarning("Yanıt zaten başlatılmış, hata işlenemedi. Kod: {Kod}", hataKodu);
+            return;
+        }
+
         // AJAX isteği ise JSON dön
         if (context.Request.IsAjaxRequest())
         {
@@ -69,11 +86,12 @@ public class ExceptionMiddleware
             // Genelde jQuery ajax fail bloğu için status code hata olmalı.
             // Ancak DataTables error handling için JSON formatı önemli.
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsJsonAsync(new 
-            { 
-                success = false, 
+            await context.Response.WriteAsJsonAsync(new
+            {
+                success = false,
                 message = errorMessage,
-                error = errorMessage 
+                error = errorMessage,
+                hataKodu
             });
             return;
         }
@@ -86,7 +104,8 @@ public class ExceptionMiddleware
             // Login sayfasında özel işlem yapalım
             if (isLoginPage)
             {
-                context.Response.Redirect($"/Account/Login?error={Uri.EscapeDataString(errorMessage)}");
+                context.Response.Redirect(
+                    $"/Account/Login?error={Uri.EscapeDataString(errorMessage)}&kod={Uri.EscapeDataString(hataKodu)}");
                 return;
             }
 
@@ -100,7 +119,8 @@ public class ExceptionMiddleware
                     var tempData = tempDataFactory.GetTempData(context);
                     tempData["ErrorMessage"] = errorMessage;
                     tempData["ErrorStatusCode"] = statusCode;
-                    
+                    tempData[KodAnahtari] = hataKodu;
+
                     // TempData'yı kaydet - Bu çok önemli!
                     tempData.Save();
 
@@ -111,7 +131,7 @@ public class ExceptionMiddleware
                         var referer = context.Request.Headers["Referer"].ToString();
 
                         // Referer'ın geçerli olduğundan emin olalım
-                        if (Uri.TryCreate(referer, UriKind.Absolute, out var uri) && 
+                        if (Uri.TryCreate(referer, UriKind.Absolute, out var uri) &&
                             IsLocalUrl(referer, context))
                         {
                             context.Response.Redirect(referer);
@@ -127,12 +147,13 @@ public class ExceptionMiddleware
 
             // Query string ile Error sayfasına yönlendir (fallback)
             context.Response.Redirect(
-                $"/Home/Error?message={Uri.EscapeDataString(errorMessage)}&statusCode={statusCode}");
+                $"/Home/Error?message={Uri.EscapeDataString(errorMessage)}&statusCode={statusCode}" +
+                $"&kod={Uri.EscapeDataString(hataKodu)}");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Hata yönlendirme işlemi sırasında ikincil bir hata oluştu");
-            
+
             // Son çare olarak basit bir hata mesajı göster
             context.Response.StatusCode = statusCode;
             context.Response.ContentType = "text/html; charset=utf-8";
@@ -142,9 +163,33 @@ public class ExceptionMiddleware
                     <body>
                         <h1>Hata: {statusCode}</h1>
                         <p>{errorMessage}</p>
+                        <p>Hata kodu: <code>{hataKodu}</code></p>
                         <a href='/'>Ana Sayfaya Dön</a>
                     </body>
                 </html>");
+        }
+    }
+
+    /// <summary>
+    /// Hatayı kaydeder ve kullanıcıya gösterilecek kodu döner. Kaydın kendisi
+    /// başarısız olsa bile bir kod üretilir; kullanıcıya her durumda tutamak
+    /// verilmelidir.
+    /// </summary>
+    private async Task<string> HataKaydetAsync(
+        HttpContext context,
+        Exception exception,
+        int statusCode,
+        string kullaniciMesaji)
+    {
+        try
+        {
+            var logService = context.RequestServices.GetRequiredService<ILogService>();
+            return await logService.HataKaydetAsync(exception, statusCode, kullaniciMesaji, context.RequestAborted);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Hata kaydı alınamadı.");
+            return Core.Logging.HataKodu.Uret();
         }
     }
 

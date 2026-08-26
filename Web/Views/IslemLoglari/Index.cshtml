@@ -1,0 +1,162 @@
+@model Dto.Loglar.LogFiltreDto
+
+@{
+	ViewData["Title"] = "İşlem Logları";
+}
+
+<div class="container-fluid">
+	<h1 class="mt-4">İşlem Logları</h1>
+	<p class="text-muted">
+		Kayıt altına alınan iş katmanı çağrıları: kim, ne zaman, hangi veriyle ne yaptı.
+		Loglar salt okunurdur; düzenlenemez ve silinemez.
+	</p>
+
+	<div class="card mb-3">
+		<div class="card-body">
+			<form id="filtreFormu" onsubmit="return false;">
+				<div class="row g-2 align-items-end">
+					<div class="col-md-2">
+						<label asp-for="Baslangic" class="form-label"></label>
+						<input asp-for="Baslangic" type="date" class="form-control"/>
+					</div>
+					<div class="col-md-2">
+						<label asp-for="Bitis" class="form-label"></label>
+						<input asp-for="Bitis" type="date" class="form-control"/>
+					</div>
+					<div class="col-md-3">
+						<label asp-for="Kullanici" class="form-label"></label>
+						<input asp-for="Kullanici" class="form-control" placeholder="kullanıcı adı"/>
+					</div>
+					<div class="col-md-2">
+						<label asp-for="HataKodu" class="form-label"></label>
+						<input asp-for="HataKodu" class="form-control font-monospace" placeholder="HTA-XXXX-XXXX"/>
+					</div>
+					<div class="col-md-3">
+						<div class="form-check mb-2">
+							<input asp-for="YalnizcaSorunlu" class="form-check-input"/>
+							<label asp-for="YalnizcaSorunlu" class="form-check-label">Yalnızca hatalı işlemler</label>
+						</div>
+						<button type="button" class="btn btn-primary btn-sm" id="uygulaDugmesi">
+							<i class="bi bi-funnel me-1"></i>Uygula
+						</button>
+						<button type="button" class="btn btn-outline-secondary btn-sm" id="temizleDugmesi">Temizle</button>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<div class="card mb-4">
+		<div class="card-body">
+			<div class="table-responsive">
+				<table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+					<thead>
+					<tr>
+						<th>Tarih</th>
+						<th>Kullanıcı</th>
+						<th>Modül</th>
+						<th>İşlem</th>
+						<th>Durum</th>
+						<th>Süre</th>
+						<th>Hata Kodu</th>
+						<th>Ayrıntı</th>
+					</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	<script>
+		$(document).ready(function () {
+			const detayUrl = '@Url.Action("Detay", "IslemLoglari")';
+			const hataDetayUrl = '@Url.Action("Ara", "HataLoglari")';
+
+			function alan(id) {
+				const el = document.getElementById(id);
+				return el ? el.value : '';
+			}
+
+			const table = $('#dataTable').DataTable({
+				processing: true,
+				serverSide: true,
+				// Varsayılan sıralama sunucuda en yeniden eskiye; kullanıcı
+				// başlığa basana kadar bu korunur.
+				ordering: true,
+				order: [],
+				searching: true,
+				ajax: {
+					url: '@Url.Action("Liste", "IslemLoglari")',
+					type: 'POST',
+					data: function (d) {
+						d.Baslangic = alan('Baslangic');
+						d.Bitis = alan('Bitis');
+						d.Kullanici = alan('Kullanici');
+						d.HataKodu = alan('HataKodu');
+						d.YalnizcaSorunlu = document.getElementById('YalnizcaSorunlu').checked;
+					}
+				},
+				language: {url: '/js/datatables-tr.json'},
+				columns: [
+					{
+						data: 'tarih',
+						render: function (data, type) {
+							if (type !== 'display' || !data) return data;
+							return new Date(data).toLocaleString('tr-TR');
+						}
+					},
+					{data: 'kullanici'},
+					{data: 'modul'},
+					{data: 'islem'},
+					{
+						data: 'durumStr',
+						render: function (data, type, row) {
+							if (type !== 'display') return data;
+							const rozet = row.basarili ? 'bg-success' : 'bg-danger';
+							return `<span class="badge ${rozet}">${data}</span>`;
+						}
+					},
+					{
+						data: 'sureMs',
+						render: function (data, type) {
+							if (type !== 'display') return data;
+							return (data ?? 0) + ' ms';
+						}
+					},
+					{
+						data: 'hataKodu',
+						defaultContent: '',
+						render: function (data, type) {
+							if (type !== 'display' || !data) return data ?? '';
+							// Koddan doğrudan hata kaydına geçilebilsin.
+							return `<a href="${hataDetayUrl}?kod=${encodeURIComponent(data)}" class="font-monospace">${data}</a>`;
+						}
+					},
+					{
+						data: 'id',
+						orderable: false,
+						render: function (data) {
+							return `<a href="${detayUrl}/${data}" class="btn btn-secondary btn-sm" title="Ayrıntı"><i class="bi bi-search"></i></a>`;
+						}
+					}
+				],
+				bAutoWidth: false
+			});
+
+			document.getElementById('uygulaDugmesi').addEventListener('click', function () {
+				table.ajax.reload();
+			});
+
+			document.getElementById('temizleDugmesi').addEventListener('click', function () {
+				document.getElementById('filtreFormu').reset();
+				['Baslangic', 'Bitis', 'Kullanici', 'HataKodu'].forEach(function (id) {
+					document.getElementById(id).value = '';
+				});
+				document.getElementById('YalnizcaSorunlu').checked = false;
+				table.ajax.reload();
+			});
+		});
+	</script>
+}

@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using Core.Repository;
 using Dto.DTOs;
 using Dto.Kullanici;
+using Dto.Kullanici.Enum;
 using Dto.KullaniciBirim;
 using Entity.Concrete;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,9 @@ public class KullaniciBirimRepository(VarlikEnvanteriDbContext context)
                 Id = p.Id,
                 KullaniciId = p.KullaniciId,
                 Username = k.Username ?? "",
+                AdSoyad = k.AdSoyad,
+                GirisYontemi = k.GirisYontemi,
+                GirisYontemiStr = k.GirisYontemi == GirisYontemi.ActiveDirectory ? "Active Directory" : "Yerel",
                 BirimAd = p.BirimAd ?? "",
                 DurumStr = p.Durum ? "Aktif" : "Pasif",
             };
@@ -44,6 +48,8 @@ public class KullaniciBirimRepository(VarlikEnvanteriDbContext context)
 
             filteredQuery = filteredQuery.Where(p =>
                 (p.Username ?? "").ToLower().Contains(lowerSearch) ||
+                (p.AdSoyad ?? "").ToLower().Contains(lowerSearch) ||
+                (p.GirisYontemiStr ?? "").ToLower().Contains(lowerSearch) ||
                 (p.BirimAd ?? "").ToLower().Contains(lowerSearch) ||
                 (p.DurumStr ?? "").ToLower().Contains(lowerSearch)
             );
@@ -57,6 +63,12 @@ public class KullaniciBirimRepository(VarlikEnvanteriDbContext context)
             {
                 case "username":
                     filteredQuery = filteredQuery.Where(p => (p.Username ?? "").ToLower().Contains(val));
+                    break;
+                case "adSoyad":
+                    filteredQuery = filteredQuery.Where(p => (p.AdSoyad ?? "").ToLower().Contains(val));
+                    break;
+                case "girisYontemiStr":
+                    filteredQuery = filteredQuery.Where(p => (p.GirisYontemiStr ?? "").ToLower().Contains(val));
                     break;
                 case "birimAd":
                     filteredQuery =
@@ -84,6 +96,12 @@ public class KullaniciBirimRepository(VarlikEnvanteriDbContext context)
                 "username" => direction
                     ? filteredQuery.OrderByDescending(p => p.Username)
                     : filteredQuery.OrderBy(p => p.Username),
+                "adSoyad" => direction
+                    ? filteredQuery.OrderByDescending(p => p.AdSoyad)
+                    : filteredQuery.OrderBy(p => p.AdSoyad),
+                "girisYontemiStr" => direction
+                    ? filteredQuery.OrderByDescending(p => p.GirisYontemi)
+                    : filteredQuery.OrderBy(p => p.GirisYontemi),
                 "birimAd" => direction
                     ? filteredQuery.OrderByDescending(p => p.BirimAd)
                     : filteredQuery.OrderBy(p => p.BirimAd),
@@ -119,6 +137,9 @@ public class KullaniciBirimRepository(VarlikEnvanteriDbContext context)
                 Id = p.Id,
                 KullaniciId = p.KullaniciId,
                 Username = k.Username ?? "",
+                AdSoyad = k.AdSoyad,
+                GirisYontemi = k.GirisYontemi,
+                GirisYontemiStr = k.GirisYontemi == GirisYontemi.ActiveDirectory ? "Active Directory" : "Yerel",
                 BirimAd = p.BirimAd ?? "",
                 DurumStr = p.Durum ? "Aktif" : "Pasif",
             }).FirstOrDefaultAsync();

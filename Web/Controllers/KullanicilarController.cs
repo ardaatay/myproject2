@@ -1,8 +1,8 @@
-﻿using Business.Abstract;
+using Business.Abstract;
 using Core.Security;
 using Dto.DTOs;
 using Dto.Kullanici;
-using Dto.KullaniciBirim;
+using Dto.Kullanici.Enum;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -14,11 +14,15 @@ namespace Web.Controllers
         IKullaniciService kullaniciService,
         IKullaniciBirimService kullaniciBirimService,
         IBirimService orbisBirimService,
+        IActiveDirectoryAyarService activeDirectoryAyarService,
         IKimlikDogrulamaService kimlikDogrulamaService)
         : Controller
     {
         public async Task<IActionResult> Index()
         {
+            // Dizin girişi kapalıyken Active Directory seçili kullanıcılar giriş
+            // yapamaz; liste ekranında bunu görünür kılmak için taşınır.
+            ViewBag.DizinAktif = await DizinAktifMiAsync();
             return View();
         }
 
@@ -92,6 +96,11 @@ namespace Web.Controllers
             if (ModelState.IsValid)
             {
                 await kullaniciService.AddAsync(dto);
+
+                TempData["SuccessMessage"] = dto.GirisYontemi == GirisYontemi.ActiveDirectory
+                    ? "Kullanıcı oluşturuldu. Şifresi Active Directory üzerinde yönetilir."
+                    : "Kullanıcı oluşturuldu. Giriş yapabilmesi için listeden şifre sıfırlaması yapın.";
+
                 return RedirectToAction(nameof(Index));
             }
 
@@ -102,7 +111,7 @@ namespace Web.Controllers
 
         public async Task<IActionResult> Edit(int id)
         {
-            var dto = await kullaniciBirimService.GetByIdAsync(id);
+            var dto = await kullaniciService.DuzenlemeIcinGetirAsync(id);
             if (dto == null)
                 return NotFound();
 
@@ -112,14 +121,25 @@ namespace Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(ListKullaniciBirimDto dto)
+        public async Task<IActionResult> Edit(KullaniciDuzenleDto dto)
         {
             if (ModelState.IsValid)
             {
-                await kullaniciBirimService.UpdateAsync(new UpdateKullaniciBirimDto()
-                    { Id = dto.Id, BirimId = dto.BirimId, BirimAd = dto.BirimAd });
-                await kullaniciService.UpdateAsync(new UpdateKullaniciDto()
-                    { Id = dto.KullaniciId, Username = dto.Username ?? "" });
+                await kullaniciService.DuzenleAsync(dto);
+
+                // Yöntem değiştiyse kullanıcının yerel şifresi ve açık oturumları
+                // düşer; yöneticinin bunu bilmesi gerekir.
+                if (dto.GirisYontemi != dto.MevcutGirisYontemi)
+                {
+                    TempData["SuccessMessage"] = dto.GirisYontemi == GirisYontemi.ActiveDirectory
+                        ? "Kullanıcı Active Directory girişine geçirildi. Yerel şifresi silindi ve açık oturumları kapatıldı."
+                        : "Kullanıcı yerel girişe geçirildi. Giriş yapabilmesi için şifre sıfırlaması yapın.";
+                }
+                else
+                {
+                    TempData["SuccessMessage"] = "Kullanıcı güncellendi.";
+                }
+
                 return RedirectToAction(nameof(Index));
             }
 
@@ -139,23 +159,39 @@ namespace Web.Controllers
         /// Şifresini unutan kullanıcı için yönetici sıfırlaması. E-posta
         /// altyapısı gerektirmez: üretilen tek kullanımlık şifre yöneticiye
         /// bir kez gösterilir, kullanıcı ilk girişte değiştirmek zorundadır.
+        /// Dizine bağlı hesaplarda şifre uygulamada tutulmadığı için işlem reddedilir.
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SifreSifirla(int id)
         {
-            var yeniSifre = await kimlikDogrulamaService.SifreSifirlaAsync(id);
+            var sonuc = await kimlikDogrulamaService.SifreSifirlaAsync(id);
 
-            if (yeniSifre is null)
-                return NotFound();
+            if (!sonuc.Basarili)
+            {
+                TempData["ErrorMessage"] = sonuc.Hata ?? "Şifre sıfırlanamadı.";
+                return RedirectToAction(nameof(Index));
+            }
 
-            TempData["GeciciSifre"] = yeniSifre;
+            TempData["GeciciSifre"] = sonuc.Sifre;
             return RedirectToAction(nameof(Index));
         }
 
         private async Task LoadSelectLists()
         {
             ViewBag.Birimler = new SelectList(await orbisBirimService.GetUstBirimlerAsync(), "Id", "Ad");
+            ViewBag.DizinAktif = await DizinAktifMiAsync();
+        }
+
+        /// <summary>
+        /// Kiracıda dizin girişinin açık olup olmadığı. Kapalıysa formda uyarı
+        /// gösterilir; seçim yine de yapılabilir, çünkü ayarlar sonradan
+        /// tamamlanabilir.
+        /// </summary>
+        private async Task<bool> DizinAktifMiAsync()
+        {
+            var ayar = await activeDirectoryAyarService.GetirAsync();
+            return ayar.Aktif && !string.IsNullOrWhiteSpace(ayar.Sunucu);
         }
     }
 }

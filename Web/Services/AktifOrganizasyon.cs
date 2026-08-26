@@ -13,7 +13,7 @@ namespace Web.Services;
 /// </summary>
 public class AktifOrganizasyon(IHttpContextAccessor httpContextAccessor) : IAktifOrganizasyon
 {
-    public const string ClaimTuru = "OrganizasyonId";
+    public const string ClaimTuru = KiraciClaim.OrganizasyonId;
 
     /// <summary>Bu role sahip kullanıcılar tüm kiracıların verisini görür.</summary>
     public const string KurumlarArasiRol = "SUPERADMIN";

@@ -35,6 +35,9 @@
         ("Kullanıcılar", "Kullanicilar", "bi-person"),
         ("Roller", "Roller", "bi-person-badge"),
         ("Kullanıcı Rolleri", "KullaniciRoller", "bi-person-check"),
+        ("Active Directory", "ActiveDirectory", "bi-diagram-3"),
+        ("İşlem Logları", "IslemLoglari", "bi-journal-text"),
+        ("Hata Logları", "HataLoglari", "bi-bug"),
         ("Kurumlar", "Kurumlar", "bi-buildings")
     };
 
@@ -225,6 +228,7 @@
     <div class="container-fluid">
         <input type="hidden" id="errorMessage" value="@(TempData["ErrorMessage"] ?? ViewBag.ErrorMessage ?? "")"/>
         <input type="hidden" id="errorStatusCode" value="@(TempData["ErrorStatusCode"] ?? ViewBag.ErrorStatusCode ?? "")"/>
+        <input type="hidden" id="errorReferans" value="@(TempData[Web.Middleware.ExceptionMiddleware.KodAnahtari] ?? ViewBag.HataKodu ?? "")"/>
         <input type="hidden" id="successMessage" value="@(TempData["SuccessMessage"] ?? "")"/>
         @RenderBody()
     </div>

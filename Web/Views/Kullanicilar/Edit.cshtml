@@ -1,53 +1,141 @@
-﻿@model Dto.KullaniciBirim.ListKullaniciBirimDto
+@using Dto.Kullanici.Enum
+@model Dto.Kullanici.KullaniciDuzenleDto
 
 @{
 	ViewData["Title"] = "Kullanıcılar";
+	var dizinAktif = (bool)(ViewBag.DizinAktif ?? false);
 }
 
 <div class="container-fluid">
 	<h1 class="mt-4">Kullanıcı Düzenle</h1>
+
 	<div class="card mb-4">
 		<div class="card-body">
-			<form asp-action="Edit">
-				<input type="hidden" asp-for="Id"/>
+			<form asp-action="Edit" method="post">
+				<input type="hidden" asp-for="KullaniciBirimId"/>
 				<input type="hidden" asp-for="KullaniciId"/>
+				<input type="hidden" asp-for="MevcutGirisYontemi"/>
 				<input type="hidden" asp-for="BirimAd"/>
+
+				<div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 px-3 small"></div>
+
 				<div class="row">
-					<div class="col-md-6">
-						<div class="form-group">
-							<label asp-for="Username" class="control-label">Username</label>
-							<input asp-for="Username" class="form-control"/>
-							<span asp-validation-for="Username" class="text-danger"></span>
-						</div>
+					<div class="col-md-6 mb-3">
+						<label asp-for="Username" class="form-label"></label>
+						<input asp-for="Username" class="form-control"/>
+						<span asp-validation-for="Username" class="text-danger small"></span>
 					</div>
-					<div class="form-group mt-1">
-						<label asp-for="BirimId">Kategori</label>
+
+					<div class="col-md-6 mb-3">
+						<label asp-for="BirimId" class="form-label"></label>
 						<select asp-for="BirimId" asp-items="ViewBag.Birimler" class="form-select" id="birimSelect">
 							<option value="">Seçiniz</option>
 						</select>
-						<span asp-validation-for="BirimId" class="text-danger"></span>
+						<span asp-validation-for="BirimId" class="text-danger small"></span>
+					</div>
+
+					<div class="col-md-6 mb-3">
+						<label asp-for="AdSoyad" class="form-label"></label>
+						<input asp-for="AdSoyad" class="form-control"/>
+						<span asp-validation-for="AdSoyad" class="text-danger small"></span>
+					</div>
+
+					<div class="col-md-6 mb-3">
+						<label asp-for="Eposta" class="form-label"></label>
+						<input asp-for="Eposta" class="form-control"/>
+						<span asp-validation-for="Eposta" class="text-danger small"></span>
 					</div>
 				</div>
-				<div class="form-group mt-1">
-					<input type="submit" value="Kaydet" class="btn btn-primary"/>
-					<a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
+
+				<div class="form-check form-switch mb-3">
+					<input asp-for="Durum" class="form-check-input" role="switch"/>
+					<label asp-for="Durum" class="form-check-label"></label>
+					<div class="form-text">Pasif hesaplar giriş yapamaz.</div>
 				</div>
+
+				<hr/>
+
+				<div class="row">
+					<div class="col-md-6 mb-3">
+						<label asp-for="GirisYontemi" class="form-label"></label>
+						<select asp-for="GirisYontemi" asp-items="Html.GetEnumSelectList<GirisYontemi>()"
+						        class="form-select" id="girisYontemi"></select>
+						<span asp-validation-for="GirisYontemi" class="text-danger small"></span>
+					</div>
+
+					<div class="col-md-6 mb-3" id="adHesapAlani">
+						<label asp-for="ActiveDirectoryKullaniciAdi" class="form-label"></label>
+						<input asp-for="ActiveDirectoryKullaniciAdi" class="form-control"/>
+						<div class="form-text">
+							Boş bırakılırsa dizinde kullanıcı adının kendisi aranır.
+						</div>
+						<span asp-validation-for="ActiveDirectoryKullaniciAdi" class="text-danger small"></span>
+					</div>
+				</div>
+
+				<div class="alert alert-warning small d-none" id="yontemUyarisi">
+					<i class="bi bi-exclamation-triangle me-1"></i>
+					<span id="yontemUyariMetni"></span>
+				</div>
+
+				<div class="alert alert-info small d-none" id="dizinBilgi">
+					<i class="bi bi-info-circle me-1"></i>
+					Şifre Active Directory üzerinde yönetilir; uygulamada saklanmaz ve buradan sıfırlanamaz.
+					@if (!dizinAktif)
+					{
+						<span class="d-block mt-2 text-danger">
+							Dizin bağlantısı şu anda kapalı veya eksik. Bu kullanıcı giriş yapamaz;
+							<a asp-controller="ActiveDirectory" asp-action="Index">Active Directory ayarlarını</a>
+							tamamlayın.
+						</span>
+					}
+				</div>
+
+				<button type="submit" class="btn btn-primary">Kaydet</button>
+				<a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
 			</form>
 		</div>
 	</div>
 </div>
 
 @section Scripts {
-	@{
-		await Html.RenderPartialAsync("_ValidationScriptsPartial");
-	}
+	<partial name="_ValidationScriptsPartial"/>
 
 	<script>
 		$(document).ready(function () {
+			const dizinDegeri = '@((int)GirisYontemi.ActiveDirectory)';
+			const mevcutYontem = '@((int)Model.MevcutGirisYontemi)';
+
 			$('#birimSelect').change(function () {
 				const selectedText = $('#birimSelect option:selected').text();
 				$('#BirimAd').val(selectedText);
 			});
+
+			function yontemDegisti() {
+				const secilen = $('#girisYontemi').val();
+				const dizin = secilen === dizinDegeri;
+
+				$('#adHesapAlani').toggleClass('d-none', !dizin);
+				$('#dizinBilgi').toggleClass('d-none', !dizin);
+
+				// Yerel seçildiğinde dizin hesabı alanı sunucuda zaten temizlenir;
+				// alan gizlenirken içeriği de boşaltılır ki kafa karıştırmasın.
+				if (!dizin) {
+					$('#ActiveDirectoryKullaniciAdi').val('');
+				}
+
+				const degisti = secilen !== mevcutYontem;
+				$('#yontemUyarisi').toggleClass('d-none', !degisti);
+
+				if (degisti) {
+					$('#yontemUyariMetni').text(dizin
+						? 'Kaydettiğinizde kullanıcının yerel şifresi silinecek ve açık oturumları kapatılacak.'
+						: 'Kaydettiğinizde kullanıcının açık oturumları kapatılacak. Giriş yapabilmesi için listeden şifre sıfırlaması yapmanız gerekir.');
+				}
+			}
+
+			$('#girisYontemi').change(yontemDegisti);
+			yontemDegisti();
 		});
 	</script>
-} 
+}

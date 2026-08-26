@@ -46,6 +46,49 @@ düğmesiyle tek kullanımlık bir şifre üretir. Şifre yalnızca bir kez gös
 kullanıcının açık oturumları kapanır ve ilk girişte değiştirmesi istenir.
 E-posta altyapısı gerekmez.
 
+Active Directory üzerinden giriş yapan hesaplarda şifre uygulamada tutulmadığı için
+bu düğme kapalıdır; sıfırlama dizin tarafında yapılır.
+
+### Kimlik doğrulama: yerel ve Active Directory
+
+Giriş yöntemi **kullanıcı bazında** seçilir. Aynı kurumda yerel hesaplarla dizin
+hesapları bir arada bulunabilir.
+
+| Yöntem | Şifre nerede | Uygulamada sıfırlanabilir mi |
+|---|---|---|
+| Yerel | Uygulama veritabanında PBKDF2 karması olarak | Evet |
+| Active Directory | Yalnızca dizinde | Hayır |
+
+**Ayarlar.** Bağlantı bilgileri **Kullanıcılar → Active Directory Ayarları**
+ekranından girilir ve veritabanında kiracı başına tek kayıtta tutulur; `appsettings`
+içinde dizin bilgisi bulunmaz. Servis hesabının şifresi DataProtection ile
+şifrelenerek saklanır — bu yüzden `UygulamaAyarlari:VeriDizini` kalıcı bir dizini
+göstermelidir, aksi halde anahtarlar yenilendiğinde şifrenin yeniden girilmesi
+gerekir. Ekran bu durumu uyarı olarak bildirir.
+
+Ayarlar kaydedilmeden önce **Bağlantıyı sına** düğmesiyle denenebilir. Test
+kullanıcı adı ve şifresi girilirse gerçek giriş akışının aynısı (arama filtresi ve
+zorunlu grup denetimi dahil) çalıştırılır; girilen test şifresi hiçbir yere yazılmaz.
+
+**Kullanıcı tanımlama.** Kullanıcı ekleme ve düzenleme ekranlarında *Giriş yöntemi*
+seçilir. Active Directory seçilirse, dizindeki hesap adı uygulamadakinden farklıysa
+ayrıca girilebilir; boş bırakılırsa kullanıcı adının kendisi aranır. Roller, birim
+ve yetkiler her iki yöntemde de uygulama tarafında yönetilir — dizin yalnızca
+kimliği doğrular.
+
+Yöntem değiştirildiğinde kullanıcının yerel şifresi silinir ve açık oturumları
+kapatılır. Dizinden yerele dönen bir hesabın giriş yapabilmesi için yönetici
+şifre sıfırlaması yapmalıdır.
+
+**Güvenlik.** Şifre bağlantı üzerinden gönderildiği için LDAPS (636) ya da StartTLS
+kullanılması önerilir. *Zorunlu grup* tanımlıysa iç içe gruplar da sayılır ve üyelik
+doğrulanamadığında giriş reddedilir. Dizin girişleri de yerel giriş gibi hatalı
+deneme sayacına ve hesap kilitlemeye tabidir.
+
+**Konteynerde.** LDAP istemci kütüphanesi (`libldap.so.2`) çalışma zamanında
+yüklenir; `Dockerfile` bunu kurar. Kendi imajınızı hazırlıyorsanız kütüphanenin
+bulunduğundan emin olun, yoksa dizin girişi çalışmaz.
+
 ## Yerel geliştirme
 
 PostgreSQL'i tek başına ayağa kaldırıp uygulamayı makinede çalıştırabilirsiniz:
@@ -174,6 +217,66 @@ içindeki varsayılan kullanılır.
 
 Tohumlama yalnızca eksik kayıtları ekler; var olanlara dokunmaz. Bu yüzden
 açılışta çalıştırılması güvenlidir.
+
+## Loglama ve hata takibi
+
+İki ayrı kayıt tutulur ve her birinin yönetim ekranı vardır. İkisi de
+`Sistem.Yonet` yetkisi ister ve salt okunurdur; log düzenlenemez veya silinemez.
+
+| Ekran | Ne tutar | Nereden yazılır |
+|---|---|---|
+| **İşlem Logları** | `[LogAspect]` ile işaretlenmiş iş katmanı çağrıları: kim, ne zaman, hangi parametreyle, ne kadar sürede | `LogInterceptor` |
+| **Hata Logları** | Kullanıcıya hata bildirimi gösterilmesine yol açan her istisna: mesaj, yığın izi, istek, kullanıcı | `ExceptionMiddleware` |
+
+Log kayıtları, işin kendi veritabanı işleminden **ayrı bir bağlantıyla** yazılır.
+Başarısız olup geri alınan bir işlemin logu da silinseydi geriye hiçbir iz
+kalmazdı — oysa asıl kaydedilmek istenen tam olarak o durumdur. Aynı nedenle
+loglama hataları yutulur ve yalnızca uygulama günlüğüne düşer; log yazılamaması
+kullanıcının işlemini bozmaz.
+
+### Hata kodu
+
+Bir hata oluştuğunda kullanıcıya teknik ayrıntı değil, `HTA-K7F4-9QXZ`
+biçiminde kısa bir referans gösterilir. Kod; bildirim kutusunda, hata sayfasında
+ve giriş ekranında kopyalanabilir olarak çıkar, AJAX yanıtlarında `hataKodu`
+alanıyla döner.
+
+Yönetici **Hata Logları** ekranının en üstündeki kutuya bu kodu yapıştırıp
+kaydın tamamına ulaşır. Arama büyük/küçük harf, tire ve boşluk farklarına
+duyarsızdır; `HTA` ön eki yazılmasa da bulur.
+
+Aynı istekte oluşan işlem logu ile hata logu aynı kodu taşır, bu yüzden iki
+ekran arasında tek tıkla geçilebilir: hatanın hangi çağrıdan ve hangi
+parametrelerle doğduğu doğrudan görülür.
+
+Kod, karıştırılan karakterleri (I, L, O, U, 0, 1) içermeyen 30 harflik bir
+alfabeden üretilir; telefonda okunacak kadar kısa, tahmin edilemeyecek kadar
+geniştir. Oturum açılmadan oluşan hatalar hiçbir kiracıya bağlı değildir ve
+listede görünmez — koduyla aranarak bulunur.
+
+Hata kaydı ele alındığında ayrıntı sayfasından **çözüldü** olarak işaretlenir;
+liste bu duruma göre süzülebilir ve özet kartlarında açık kayıt sayısı görünür.
+
+### Neler loglanır
+
+İşlem logu, iş sınıflarındaki `[LogAspect]` işaretine bağlıdır. Varlık
+yönetiminin yanı sıra kullanıcı, rol ve rol atama işlemleri de kayda alınır.
+
+Kimlik doğrulama (`KimlikDogrulamaManager`) ve dizin servisleri bilinçli olarak
+bu sarmalın dışındadır: parametreleri düz metin şifre taşır ve loglanmamalıdır.
+Active Directory ayarlarının değiştirilmesi bu yüzden elle, yalnızca güvenli
+alanlarla kaydedilir — servis hesabı şifresinin kendisi değil, yalnızca
+değiştirilip değiştirilmediği yazılır.
+
+### İşletim notları
+
+- Tablolar sürekli büyür. Uzun süre çalışan kurulumlarda `logs` ve
+  `hata_loglari` için bir saklama süresi belirleyip düzenli temizlik
+  planlanmalıdır; uygulama kendiliğinden silme yapmaz.
+- Bu sürümden önce yazılmış log kayıtlarında kiracı bilgisi boştur
+  (`organizasyon_id = 0`); bu kayıtlar kiracı yöneticisinin listesinde
+  görünmez. Tek kiracılı bir kurulumda tümünü mevcut organizasyona taşımak
+  için: `UPDATE logs SET organizasyon_id = <id> WHERE organizasyon_id = 0;`
 
 ## Veritabanı şeması
 

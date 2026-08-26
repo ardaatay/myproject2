@@ -13,6 +13,14 @@
 
     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
+    @if (ViewBag.HataKodu != null)
+    {
+        <div class="alert alert-secondary small" role="alert">
+            Hata kodu: <code style="user-select: all">@ViewBag.HataKodu</code><br/>
+            Bu kodu sistem yöneticinize iletin.
+        </div>
+    }
+
     <div class="mb-3">
         <label asp-for="Username" class="form-label">Kullanıcı adı</label>
         <input asp-for="Username" class="form-control" autocomplete="username" autofocus/>

@@ -1,12 +1,27 @@
-﻿@{
+@using Dto.Kullanici.Enum
+@{
 	ViewData["Title"] = "Kullanıcılar";
+	var dizinAktif = (bool)(ViewBag.DizinAktif ?? false);
 }
 
 <div class="container-fluid">
 	<h1 class="mt-4">Kullanıcı Listesi</h1>
+
+	@if (!dizinAktif)
+	{
+		<div class="alert alert-secondary small">
+			<i class="bi bi-info-circle me-1"></i>
+			Active Directory girişi kapalı. Dizin üzerinden giriş yapacak kullanıcı tanımlamak için önce
+			<a asp-controller="ActiveDirectory" asp-action="Index">dizin ayarlarını</a> yapılandırın.
+		</div>
+	}
+
 	<div class="card mb-4">
-		<div class="card-header">
+		<div class="card-header d-flex justify-content-between align-items-center">
 			<a asp-action="Create" class="btn btn-primary">Yeni Ekle</a>
+			<a asp-controller="ActiveDirectory" asp-action="Index" class="btn btn-outline-secondary">
+				<i class="bi bi-diagram-3 me-1"></i>Active Directory Ayarları
+			</a>
 		</div>
 		<div class="card-body">
 			<div class="table-responsive">
@@ -15,6 +30,8 @@
 					<tr>
 						<th>İşlemler</th>
 						<th>Kullanıcı Adı</th>
+						<th>Ad Soyad</th>
+						<th>Giriş Yöntemi</th>
 						<th>Birim</th>
 						<th>Durum</th>
 					</tr>
@@ -35,6 +52,7 @@
 		$(document).ready(function () {
 			/* Define global variables for shared scripts */
 			const deleteUrlBase = '@Url.Action("Delete")';
+			const dizinYontemi = @((int)GirisYontemi.ActiveDirectory);
 
 			const table = $('#dataTable').DataTable({
 				stateSave: true,
@@ -55,12 +73,32 @@
 						render: function (data, type, row) {
 							let buttons = '';
 							buttons += `<a href="Kullanicilar/Edit/${row.id}" class="btn btn-secondary btn-sm me-1" title="Güncelle"><i class="bi bi-info-circle"></i></a>`;
-							buttons += `<button class="btn btn-warning btn-sm me-1" onclick="sifreSifirla(${row.kullaniciId}, '${row.username}')" title="Şifre sıfırla"><i class="bi bi-key"></i></button>`;
+
+							// Dizine bağlı hesabın şifresi uygulamada tutulmaz; sıfırlama düğmesi
+							// kapalı gösterilir ki yönetici işlemin neden yapılamadığını görsün.
+							if (row.girisYontemi === dizinYontemi) {
+								buttons += `<button class="btn btn-warning btn-sm me-1" disabled title="Şifre Active Directory üzerinde yönetilir"><i class="bi bi-key"></i></button>`;
+							} else {
+								buttons += `<button class="btn btn-warning btn-sm me-1" onclick="sifreSifirla(${row.kullaniciId}, '${row.username}')" title="Şifre sıfırla"><i class="bi bi-key"></i></button>`;
+							}
+
 							buttons += `<button class="btn btn-danger btn-sm me-1" onclick="deleteRecord('${deleteUrlBase}/${row.id}')" title="Sil"><i class="bi bi-trash"></i></button>`;
 							return `<div class="btn-group">${buttons}</div>`;
 						}
 					},
 					{data: 'username'},
+					{data: 'adSoyad', defaultContent: ''},
+					{
+						data: 'girisYontemiStr',
+						render: function (data, type, row) {
+							if (type !== 'display') {
+								return data;
+							}
+
+							const rozet = row.girisYontemi === dizinYontemi ? 'bg-primary' : 'bg-secondary';
+							return `<span class="badge ${rozet}">${data}</span>`;
+						}
+					},
 					{data: 'birimAd'},
 					{data: 'durumStr'}
 				],
@@ -104,4 +142,4 @@
 			});
 		</script>
 	}
-} 
+}

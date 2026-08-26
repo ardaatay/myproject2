@@ -81,7 +81,7 @@ public class HomeController(
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error(string? message = null, int? statusCode = null)
+    public IActionResult Error(string? message = null, int? statusCode = null, string? kod = null)
     {
         // Query string'den gelen parametreleri kontrol et
         if (!string.IsNullOrEmpty(message))
@@ -97,6 +97,12 @@ public class HomeController(
         // Eğer TempData'da zaten hata mesajı varsa onu kullan
         ViewBag.ErrorMessage = TempData["ErrorMessage"]?.ToString();
         ViewBag.ErrorStatusCode = TempData["ErrorStatusCode"]?.ToString();
+
+        // Kod ya sorgu dizesinden ya da yönlendirmeyi yapan middleware'in
+        // TempData'sinden gelir; ikisi de yoksa gösterilecek referans yoktur.
+        var hataKodu = !string.IsNullOrWhiteSpace(kod)
+            ? kod
+            : TempData[Web.Middleware.ExceptionMiddleware.KodAnahtari]?.ToString();
 
         // İstisna bilgilerini al
         var exceptionHandlerPathFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
@@ -114,7 +120,8 @@ public class HomeController(
             ErrorMessage = message,
             StatusCode = statusCode ?? 500,
             // Sadece geliştirme ortamında stack trace'i göster
-            StackTrace = environment.IsDevelopment() ? exception?.StackTrace : null
+            StackTrace = environment.IsDevelopment() ? exception?.StackTrace : null,
+            HataKodu = hataKodu
         };
 
         return View(errorViewModel);

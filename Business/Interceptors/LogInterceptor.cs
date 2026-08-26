@@ -1,24 +1,29 @@
-﻿using System.Security.Claims;
+﻿using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Business.Abstract;
 using Castle.DynamicProxy;
+using Core.Logging;
 using Entity.Concrete;
-using Microsoft.AspNetCore.Http;
 
 namespace Business.Interceptors;
 
-public class LogInterceptor(ILogService logService, IHttpContextAccessor httpContextAccessor) : IInterceptor
+public class LogInterceptor(ILogService logService, IIstekBaglami istekBaglami) : IInterceptor
 {
     public void Intercept(IInvocation invocation)
     {
+        var kronometre = Stopwatch.StartNew();
+
         var log = new Log
         {
+            OrganizasyonId = istekBaglami.OrganizasyonId,
             MethodName = invocation.Method.Name,
             ClassName = invocation.Method.DeclaringType?.Name ?? "",
             Parameters = SerializeObject(invocation.Arguments),
             ExecutingTime = DateTime.Now,
-            Username = GetCurrentUsername()
+            Username = istekBaglami.Kullanici,
+            IpAdresi = istekBaglami.IpAdresi,
+            Yol = istekBaglami.Yol
         };
 
         try
@@ -27,7 +32,7 @@ public class LogInterceptor(ILogService logService, IHttpContextAccessor httpCon
         }
         catch (Exception ex)
         {
-            log.Error = ex.Message;
+            HataIsle(log, ex, kronometre);
             logService.Add(log);
             throw;
         }
@@ -36,21 +41,35 @@ public class LogInterceptor(ILogService logService, IHttpContextAccessor httpCon
         {
             if (invocation.Method.ReturnType == typeof(Task))
             {
-                invocation.ReturnValue = InterceptAsync((Task)(invocation.ReturnValue ?? Task.CompletedTask), log);
+                invocation.ReturnValue = InterceptAsync((Task)(invocation.ReturnValue ?? Task.CompletedTask), log, kronometre);
             }
             else // Task<T>
             {
                 var resultType = invocation.Method.ReturnType.GetGenericArguments()[0];
                 var method = typeof(LogInterceptor).GetMethod(nameof(InterceptAsyncGeneric), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 var genericMethod = method!.MakeGenericMethod(resultType);
-                invocation.ReturnValue = genericMethod.Invoke(this, new object[] { invocation.ReturnValue!, log });
+                invocation.ReturnValue = genericMethod.Invoke(this, new object[] { invocation.ReturnValue!, log, kronometre });
             }
         }
         else
         {
             log.ReturnValue = GetReturnValue(invocation);
+            log.SureMs = (int)kronometre.ElapsedMilliseconds;
             logService.Add(log);
         }
+    }
+
+    /// <summary>
+    /// Başarısız çağrıyı işaretler ve isteğin hata koduyla eşler. Aynı kod,
+    /// istisna kullanıcıya ulaştığında hata kaydına da yazılır; iki log
+    /// böylece birbirine bağlanır.
+    /// </summary>
+    private void HataIsle(Log log, Exception ex, Stopwatch kronometre)
+    {
+        log.Error = ex.Message;
+        log.Basarili = false;
+        log.HataKodu = istekBaglami.HataKodu();
+        log.SureMs = (int)kronometre.ElapsedMilliseconds;
     }
 
     private static bool IsAsyncMethod(System.Reflection.MethodInfo method)
@@ -61,16 +80,17 @@ public class LogInterceptor(ILogService logService, IHttpContextAccessor httpCon
         );
     }
 
-    private async Task InterceptAsync(Task task, Log log)
+    private async Task InterceptAsync(Task task, Log log, Stopwatch kronometre)
     {
         try
         {
             await task;
             log.ReturnValue = "Task completed successfully";
+            log.SureMs = (int)kronometre.ElapsedMilliseconds;
         }
         catch (Exception ex)
         {
-            log.Error = ex.Message;
+            HataIsle(log, ex, kronometre);
             throw;
         }
         finally
@@ -79,17 +99,18 @@ public class LogInterceptor(ILogService logService, IHttpContextAccessor httpCon
         }
     }
 
-    private async Task<T> InterceptAsyncGeneric<T>(Task<T> task, Log log)
+    private async Task<T> InterceptAsyncGeneric<T>(Task<T> task, Log log, Stopwatch kronometre)
     {
         T result;
         try
         {
             result = await task;
             log.ReturnValue = SerializeObject(result!);
+            log.SureMs = (int)kronometre.ElapsedMilliseconds;
         }
         catch (Exception ex)
         {
-            log.Error = ex.Message;
+            HataIsle(log, ex, kronometre);
             throw;
         }
         finally
@@ -127,7 +148,7 @@ public class LogInterceptor(ILogService logService, IHttpContextAccessor httpCon
                 WriteIndented = false,
                 ReferenceHandler = ReferenceHandler.IgnoreCycles, // Döngüleri engelle
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                MaxDepth = 3 
+                MaxDepth = 3
             });
         }
         catch (Exception ex)
@@ -139,7 +160,7 @@ public class LogInterceptor(ILogService logService, IHttpContextAccessor httpCon
     private static object SanitizeObject(object obj)
     {
         if (obj == null) return null!;
-        
+
         var type = obj.GetType();
 
         // IFormFile kontrolü (Microsoft.AspNetCore.Http.IFormFile)
@@ -174,8 +195,8 @@ public class LogInterceptor(ILogService logService, IHttpContextAccessor httpCon
         // Stack overflow riskine karşı derinlik kontrolü eklenebilir ama şimdilik basit tutalım.
         // Sadece DTO namespace altındakileri veya belirli tipleri filteleyebiliriz.
         // Ancak en garantisi yeni bir Dictionary'e maplemek.
-        
-        try 
+
+        try
         {
              var dict = new Dictionary<string, object>();
              foreach (var prop in type.GetProperties())
@@ -192,43 +213,5 @@ public class LogInterceptor(ILogService logService, IHttpContextAccessor httpCon
         {
             return obj.ToString() ?? "ComplexObject";
         }
-    }
-
-    private string GetCurrentUsername()
-    {
-        var username = "Anonim";
-
-        if (httpContextAccessor.HttpContext != null)
-        {
-            // Claims'den kullanıcı adını al
-            var user = httpContextAccessor.HttpContext.User;
-            if (user.Identity?.IsAuthenticated == true)
-            {
-                // Önce Name claim'i kontrol et
-                var nameClaim = user.FindFirst(ClaimTypes.Name);
-                if (nameClaim != null)
-                {
-                    username = nameClaim.Value;
-                }
-                // Alternatif olarak NameIdentifier claim'i kontrol et
-                else
-                {
-                    var nameIdentifierClaim = user.FindFirst(ClaimTypes.NameIdentifier);
-                    if (nameIdentifierClaim != null)
-                    {
-                        username = nameIdentifierClaim.Value;
-                    }
-                }
-
-                // Eğer özel bir claim kullanıyorsanız (örneğin "preferred_username")
-                var preferredUsernameClaim = user.FindFirst("preferred_username");
-                if (preferredUsernameClaim != null)
-                {
-                    username = preferredUsernameClaim.Value;
-                }
-            }
-        }
-
-        return username;
     }
 }

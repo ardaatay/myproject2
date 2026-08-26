@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Business.Abstract;
+using Core.Aspects;
 using Core.Exceptions;
 using Dto.Kullanici;
 using Dto.Rol;
@@ -24,6 +25,8 @@ namespace Business.Concrete
             return mapper.Map<UpdateRolDto>(entity);
         }
 
+
+        [LogAspect]
         public async Task<CreateRolDto> AddAsync(CreateRolDto dto)
         {
             return await unitOfWork.ExecuteInTransactionAsync(async () =>
@@ -36,6 +39,8 @@ namespace Business.Concrete
             });
         }
 
+
+        [LogAspect]
         public async Task<UpdateRolDto> UpdateAsync(UpdateRolDto dto)
         {
             return await unitOfWork.ExecuteInTransactionAsync(async () =>
@@ -52,6 +57,8 @@ namespace Business.Concrete
             });
         }
 
+
+        [LogAspect]
         public async Task DeleteAsync(int id)
         {
             await unitOfWork.ExecuteInTransactionAsync(async () =>
@@ -72,6 +79,8 @@ namespace Business.Concrete
             return await repository.AnyAsync(x => x.Id == id);
         }
 
+
+        [LogAspect]
         public async Task RolleriKaydetAsync(KullaniciRolAtamaDto model)
         {
             await rolRepository.RolleriKaydetAsync(model);

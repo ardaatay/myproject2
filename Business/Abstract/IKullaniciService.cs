@@ -10,6 +10,13 @@ namespace Business.Abstract
 
         Task<List<ListKullaniciDto>> GetAllAsync();
         Task<UpdateKullaniciDto> GetByIdAsync(int id);
+        Task<KullaniciDuzenleDto?> DuzenlemeIcinGetirAsync(int kullaniciBirimId);
+
+        /// <summary>
+        /// Kullanıcı kimlik bilgilerini, giriş yöntemini ve birimini birlikte günceller.
+        /// Giriş yöntemi değiştiğinde yerel şifre ve açık oturumlar geçersizleşir.
+        /// </summary>
+        Task DuzenleAsync(KullaniciDuzenleDto dto);
         Task<ListKullaniciDto> GetByUsernameAsync(string username);
         Task<UpdateKullaniciDto> AddAsync(CreateKullaniciDto dto);
         Task<UpdateKullaniciDto> UpdateAsync(UpdateKullaniciDto dto);
