@@ -87,6 +87,18 @@ public static class BaslangicVerisi
                 Yol = string.Empty
             };
 
+            // Nested set numaraları kiracı içinde tekil olmalı: yeni kök,
+            // organizasyonda hâlihazırda kullanılan en büyük sınırın ardına
+            // yerleşir. Kök birimi olmayan ama artık kayıt taşıyan bir
+            // organizasyonda da numaralar çakışmaz.
+            var enSagSinir = await context.Birimler
+                .IgnoreQueryFilters()
+                .Where(b => b.OrganizasyonId == organizasyon.Id)
+                .MaxAsync(b => (int?)b.Sag, cancellationToken) ?? 0;
+
+            kokBirim.Sol = enSagSinir + 1;
+            kokBirim.Sag = enSagSinir + 2;
+
             context.Birimler.Add(kokBirim);
             await context.SaveChangesAsync(cancellationToken);
 

@@ -196,6 +196,11 @@ public class VarlikEnvanteriDbContext : DbContext
 
             birim.HasIndex(b => b.UstId);
             birim.HasIndex(b => b.Yol);
+
+            // Nested set numaralandırması kiracı başınadır; alt ağaç ve ata sorguları
+            // her zaman organizasyon + aralık biçiminde geldiği için indeksler bileşik.
+            birim.HasIndex(b => new { b.OrganizasyonId, b.Sol });
+            birim.HasIndex(b => new { b.OrganizasyonId, b.Sag });
         });
 
         modelBuilder.Entity<ListAgveSistemDto>()

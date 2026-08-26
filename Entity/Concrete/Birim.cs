@@ -21,13 +21,28 @@ public class Birim : IEntity<int>, IKiraciEntity
 
     /// <summary>
     /// Materialized path: "/1/5/12/" biçiminde, kökten bu birime kadar olan kimlikler.
-    /// Alt ağaç sorguları bu sütun üzerinden StartsWith ile yapılır.
+    /// Alt ağaç sorguları <see cref="Sol"/>/<see cref="Sag"/> üzerinden yapılır; bu sütun
+    /// atalara doğrudan bakabilmek ve ağacın tutarlılığını gözle doğrulayabilmek için tutulur.
     /// </summary>
     [MaxLength(900)]
     public string Yol { get; set; } = null!;
 
     /// <summary>Kök birimlerde 0, her alt kademede bir artar.</summary>
     public int Seviye { get; set; }
+
+    /// <summary>
+    /// Nested set sol sınırı. Ağaç, ön sıralı gezinme sırasında her düğüme
+    /// inişte ve çıkışta birer numara verilerek kodlanır; bir düğümün alt ağacı
+    /// tam olarak (Sol, Sag) aralığına düşen kayıtlardır. Numaralandırma kiracı
+    /// başınadır: değerler yalnızca aynı <see cref="OrganizasyonId"/> içinde anlamlıdır.
+    /// </summary>
+    public int Sol { get; set; }
+
+    /// <summary>
+    /// Nested set sağ sınırı. Yaprak düğümlerde <c>Sag = Sol + 1</c>; genel olarak
+    /// <c>Sag - Sol - 1</c>, alt ağaçtaki düğüm sayısının iki katıdır.
+    /// </summary>
+    public int Sag { get; set; }
 
     /// <summary>Aynı seviyedeki kardeşler arasında görüntüleme sırası.</summary>
     public int Sira { get; set; }

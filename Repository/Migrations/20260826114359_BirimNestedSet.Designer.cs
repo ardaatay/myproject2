@@ -12,9 +12,11 @@ using Repository.Context;
 namespace Repository.Migrations
 {
     [DbContext(typeof(VarlikEnvanteriDbContext))]
-    partial class VarlikEnvanteriDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260826114359_BirimNestedSet")]
+    partial class BirimNestedSet
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

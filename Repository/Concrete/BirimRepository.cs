@@ -12,6 +12,19 @@ namespace Repository.Concrete;
 public class BirimRepository(VarlikEnvanteriDbContext context)
     : GenericRepository<Birim, int>(context), IBirimRepository
 {
+    /// <summary>
+    /// Danışmalı kilidin ad alanı. Aynı veritabanındaki başka bir kilit
+    /// kullanıcısıyla çakışmaması için birim ağacına ayrılmış sabit değer.
+    /// </summary>
+    private const int AgacKilidiAlani = 0x4252494D; // "BRIM"
+
+    /// <summary>
+    /// Bozuk veriye (üst birim döngüsü) karşı gezinme derinliği sınırı. Yol
+    /// sütunu 900 karakterle sınırlı olduğu için gerçek ağaçlar bunun yanına
+    /// yaklaşamaz.
+    /// </summary>
+    private const int AzamiDerinlik = 64;
+
     private IQueryable<ListBirimDto> ListeQuery() =>
         from b in context.Birimler
         join u in context.Birimler on b.UstId equals u.Id into ust
@@ -25,6 +38,8 @@ public class BirimRepository(VarlikEnvanteriDbContext context)
             UstAd = u != null ? u.Ad : "",
             Seviye = b.Seviye,
             Sira = b.Sira,
+            Sol = b.Sol,
+            Sag = b.Sag,
             Durum = b.Durum,
             DurumStr = b.Durum ? "Aktif" : "Pasif",
             TamYol = b.Yol
@@ -38,7 +53,7 @@ public class BirimRepository(VarlikEnvanteriDbContext context)
             query = query.Where(b => b.Durum);
 
         return await query
-            .OrderBy(b => b.Sira).ThenBy(b => b.Ad)
+            .OrderBy(b => b.Sol)
             .Select(b => new BirimSecimDto { Id = b.Id, Ad = b.Ad })
             .ToListAsync();
     }
@@ -52,15 +67,18 @@ public class BirimRepository(VarlikEnvanteriDbContext context)
         if (ust is null)
             return [];
 
-        // Yol "/1/5/12/" biçiminde olduğu için StartsWith ile alt ağaç tam olarak
-        // eşleşir; "/1/5/" öneki "/1/50/" ile karışmaz çünkü ayraç sonda da var.
-        var query = context.Birimler.Where(b => b.Yol.StartsWith(ust.Yol) && b.Id != ustId);
+        // Alt ağaç, üst birimin nested set aralığına düşen kayıtlardır. Aralık
+        // yalnızca kendi kiracısı içinde anlamlı olduğundan organizasyon koşulu
+        // açıkça yazılır: global sorgu filtresi kapalıyken (tohumlama, arka plan
+        // işleri) tek başına aralık koşulu kiracıları birbirine karıştırır.
+        var query = context.Birimler.Where(b =>
+            b.OrganizasyonId == ust.OrganizasyonId && b.Sol > ust.Sol && b.Sag < ust.Sag);
 
         if (sadeceAktif)
             query = query.Where(b => b.Durum);
 
         return await query
-            .OrderBy(b => b.Seviye).ThenBy(b => b.Sira).ThenBy(b => b.Ad)
+            .OrderBy(b => b.Sol)
             .Select(b => new BirimSecimDto { Id = b.Id, Ad = b.Ad })
             .ToListAsync();
     }
@@ -69,59 +87,122 @@ public class BirimRepository(VarlikEnvanteriDbContext context)
     {
         return await context.Birimler
             .Where(b => b.UstId == ustId)
-            .OrderBy(b => b.Sira).ThenBy(b => b.Ad)
+            .OrderBy(b => b.Sol)
             .ToListAsync();
     }
 
-    public async Task<List<Birim>> GetAltAgacEntityAsync(string yolOneki)
+    public async Task<List<Birim>> GetAltAgacEntityAsync(Birim kok, bool kendisiDahil = false)
     {
-        return await context.Birimler
-            .Where(b => b.Yol.StartsWith(yolOneki))
-            .ToListAsync();
+        var query = context.Birimler.Where(b => b.OrganizasyonId == kok.OrganizasyonId);
+
+        query = kendisiDahil
+            ? query.Where(b => b.Sol >= kok.Sol && b.Sag <= kok.Sag)
+            : query.Where(b => b.Sol > kok.Sol && b.Sag < kok.Sag);
+
+        return await query.OrderBy(b => b.Sol).ToListAsync();
     }
 
     public async Task<List<ListBirimDto>> GetAgacAsync()
     {
-        var birimler = await ListeQuery().ToListAsync();
+        var birimler = await ListeQuery().OrderBy(b => b.Sol).ToListAsync();
 
-        // Hiyerarşik sıra: her düğüm kendi atalarının hemen ardından gelir.
-        // Sıralama Yol üzerinden yapılamaz (kimlikler metin olarak sıralanır),
-        // bu yüzden ağaç bellekte gezilerek düzleştirilir.
-        // Kök birimler 0 anahtarı altında toplanır; kimlikler 1'den başladığı
-        // için bu değerle çakışma olmaz.
-        var cocuklar = birimler
-            .GroupBy(b => b.UstId ?? 0)
-            .ToDictionary(g => g.Key, g => g.OrderBy(x => x.Sira).ThenBy(x => x.Ad).ToList());
+        // Sol sırası ön sıralı gezinme sırasıdır: her düğüm kendi atalarının
+        // hemen ardından gelir. Ad zinciri bu yüzden tek geçişte, seviyeye göre
+        // budanan bir yığınla kurulabilir; ağacı bellekte yeniden inşa etmeye
+        // gerek kalmaz.
+        var zincir = new List<string>();
 
-        var sonuc = new List<ListBirimDto>(birimler.Count);
-        var adlar = birimler.ToDictionary(b => b.Id, b => b.Ad);
-
-        void Gez(int ustId, string onek)
+        foreach (var birim in birimler)
         {
-            if (!cocuklar.TryGetValue(ustId, out var dugumler))
+            // Numaralandırma bozuksa (henüz kurulmamış ağaç, elle müdahale)
+            // girinti kaymasın diye seviye yığının boyuyla sınırlanır.
+            var derinlik = Math.Clamp(birim.Seviye, 0, zincir.Count);
+
+            zincir.RemoveRange(derinlik, zincir.Count - derinlik);
+            zincir.Add(birim.Ad);
+
+            birim.TamYol = string.Join(" / ", zincir);
+        }
+
+        return birimler;
+    }
+
+    public async Task<int> AgaciYenidenKurAsync(int organizasyonId)
+    {
+        // Yapısal değişiklik ağacın tamamını yeniden numaraladığı için iki
+        // eşzamanlı düzenleme birbirinin numaralarını ezebilir. Danışmalı kilit
+        // kiracı başınadır ve işlem sonunda kendiliğinden bırakılır. Çağıranın
+        // açık bir işlem içinde olması şart: aksi halde kilit, kendisini alan
+        // ifadenin örtük işlemiyle birlikte hemen serbest kalır.
+        await context.Database.ExecuteSqlAsync(
+            $"SELECT pg_advisory_xact_lock({AgacKilidiAlani}, {organizasyonId})");
+
+        // Kardeş sırası veritabanında belirlenir. Karşılaştırma tek yerde
+        // kaldığı için uygulamanın metin karşılaştırması ile PostgreSQL'in
+        // harmanlaması ayrışamaz; GroupBy kaynak sırasını koruduğundan sıra
+        // gruplara aynen taşınır.
+        var dugumler = await context.Birimler
+            .IgnoreQueryFilters()
+            .Where(b => b.OrganizasyonId == organizasyonId)
+            .OrderBy(b => b.Sira).ThenBy(b => b.Ad).ThenBy(b => b.Id)
+            .ToListAsync();
+
+        if (dugumler.Count == 0)
+            return 0;
+
+        var cocuklar = dugumler
+            .Where(b => b.UstId.HasValue)
+            .GroupBy(b => b.UstId!.Value)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var kimlikler = dugumler.Select(b => b.Id).ToHashSet();
+
+        // Üst birimi bu kiracıda bulunmayan artıklar da kök gibi ele alınır;
+        // aksi halde numarasız kalır ve Sol'a bakan hiçbir sorguda görünmezler.
+        var kokler = dugumler
+            .Where(b => b.UstId is not { } ustId || !kimlikler.Contains(ustId))
+            .ToList();
+
+        var gezilen = new HashSet<int>(dugumler.Count);
+        var sonraki = 1;
+
+        void Gez(Birim dugum, int seviye, string ustYol)
+        {
+            // Döngüsel üst birim bağı ancak veritabanına elle dokunulursa
+            // oluşabilir; oluştuğunda numaralandırma yine de sonlanmalı.
+            if (!gezilen.Add(dugum.Id))
                 return;
 
-            foreach (var dugum in dugumler)
+            dugum.Sol = sonraki++;
+            dugum.Seviye = seviye;
+            dugum.Yol = $"{ustYol}{dugum.Id}/";
+
+            if (seviye < AzamiDerinlik && cocuklar.TryGetValue(dugum.Id, out var altlar))
             {
-                dugum.TamYol = onek.Length == 0 ? dugum.Ad : $"{onek} / {dugum.Ad}";
-                sonuc.Add(dugum);
-                Gez(dugum.Id, dugum.TamYol);
+                foreach (var alt in altlar)
+                    Gez(alt, seviye + 1, dugum.Yol);
             }
+
+            dugum.Sag = sonraki++;
         }
 
-        Gez(0, "");
+        foreach (var kok in kokler)
+            Gez(kok, 0, "/");
 
-        // Üst birimi silinmiş / erişilemez olan artıklar da listede görünsün.
-        var yerlesenler = sonuc.Select(b => b.Id).ToHashSet();
-        foreach (var artik in birimler.Where(b => !yerlesenler.Contains(b.Id)))
-        {
-            artik.TamYol = adlar.TryGetValue(artik.UstId ?? 0, out var ustAd)
-                ? $"{ustAd} / {artik.Ad}"
-                : artik.Ad;
-            sonuc.Add(artik);
-        }
+        // Köklerden erişilemeyen düğümler (derinlik sınırına takılan ya da
+        // döngü içindeki dallar) da numaralanır; böylece hiçbir satır aralıksız
+        // kalmaz.
+        foreach (var artik in dugumler.Where(b => !gezilen.Contains(b.Id)))
+            Gez(artik, 0, "/");
 
-        return sonuc;
+        // Değeri değişmeyen satırları EF zaten yazmaz; sayım yalnızca çağırana
+        // kaç satırın gerçekten kaydığını bildirmek için.
+        var degisen = context.ChangeTracker.Entries<Birim>()
+            .Count(giris => giris.State == EntityState.Modified);
+
+        await context.SaveChangesAsync();
+
+        return degisen;
     }
 
     public async Task<DataTablesResponse<ListBirimDto>> ProcessTableRequestAsync(
@@ -177,7 +258,8 @@ public class BirimRepository(VarlikEnvanteriDbContext context)
 
         var recordsFiltered = await filteredQuery.CountAsync();
 
-        // Order
+        // Order. Varsayılan sıra ağaçtaki sıradır: Sol tek başına hem hiyerarşiyi
+        // hem kardeş düzenini kodladığı için ek sıralama anahtarı gerekmez.
         if (request.Columns != null && request.Orders != null && request.Orders.Count != 0)
         {
             var order = request.Orders.First();
@@ -198,12 +280,12 @@ public class BirimRepository(VarlikEnvanteriDbContext context)
                 "durumStr" => direction
                     ? filteredQuery.OrderByDescending(p => p.DurumStr)
                     : filteredQuery.OrderBy(p => p.DurumStr),
-                _ => filteredQuery.OrderBy(p => p.Seviye).ThenBy(p => p.Sira).ThenBy(p => p.Ad)
+                _ => filteredQuery.OrderBy(p => p.Sol)
             };
         }
         else
         {
-            filteredQuery = filteredQuery.OrderBy(p => p.Seviye).ThenBy(p => p.Sira).ThenBy(p => p.Ad);
+            filteredQuery = filteredQuery.OrderBy(p => p.Sol);
         }
 
         // Paging

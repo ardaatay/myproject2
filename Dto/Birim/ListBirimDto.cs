@@ -9,6 +9,13 @@ public class ListBirimDto
     public string UstAd { get; set; } = "";
     public int Seviye { get; set; }
     public int Sira { get; set; }
+
+    /// <summary>Nested set sol sınırı; ağaçtaki ön sıralı konumu verir.</summary>
+    public int Sol { get; set; }
+
+    /// <summary>Nested set sağ sınırı; alt ağaç (Sol, Sag) aralığıdır.</summary>
+    public int Sag { get; set; }
+
     public bool Durum { get; set; }
     public string DurumStr { get; set; } = "";
 

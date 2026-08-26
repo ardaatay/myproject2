@@ -41,16 +41,14 @@ public class BirimManager(
 
         if (haricId.HasValue)
         {
-            // Bir birim kendi alt ağacına taşınamaz; o dal seçeneklerden çıkarılır.
             var birim = await birimRepository.GetByIdAsync(haricId.Value);
-            if (birim is not null)
-            {
-                var yasakli = (await birimRepository.GetAltAgacEntityAsync(birim.Yol))
-                    .Select(b => b.Id)
-                    .ToHashSet();
 
-                agac = agac.Where(b => !yasakli.Contains(b.Id)).ToList();
-            }
+            // Bir birim kendi alt ağacına taşınamaz; o dal seçeneklerden çıkarılır.
+            // Aralık zaten yüklenmiş listede olduğu için ek sorgu gerekmez.
+            if (birim is not null)
+                agac = agac
+                    .Where(b => b.Sol < birim.Sol || b.Sag > birim.Sag)
+                    .ToList();
         }
 
         return agac
@@ -69,20 +67,23 @@ public class BirimManager(
     {
         return await unitOfWork.ExecuteInTransactionAsync(async () =>
         {
-            var ust = await UstBirimiDogrulaAsync(dto.UstId);
+            await UstBirimiDogrulaAsync(dto.UstId);
 
             var entity = mapper.Map<Birim>(dto);
             entity.CreatedDate = DateTime.Now;
             entity.Durum = true;
-            entity.Seviye = ust is null ? 0 : ust.Seviye + 1;
-            entity.Yol = string.Empty; // kimlik atandıktan sonra hesaplanır
+
+            // Sol, Sag, Seviye ve Yol türev sütunlardır; kimlik atandıktan sonra
+            // ağaç yeniden numaralandırılırken hesaplanır. Yol boş bırakılamaz,
+            // sütun zorunlu.
+            entity.Yol = string.Empty;
 
             var repository = unitOfWork.GetRepository<Birim, int>();
             await repository.AddAsync(entity);
 
-            // Yol, kendi kimliğini içerdiği için ancak ekleme sonrası kesinleşir.
-            entity.Yol = YolHesapla(ust?.Yol, entity.Id);
-            await repository.UpdateAsync(entity);
+            // Kiracı damgası kaydetme sırasında vurulduğu için organizasyon
+            // ancak eklemeden sonra kesinleşir.
+            await birimRepository.AgaciYenidenKurAsync(entity.OrganizasyonId);
 
             return mapper.Map<CreateBirimDto>(entity);
         });
@@ -97,35 +98,32 @@ public class BirimManager(
             var entity = await repository.GetAsync(x => x.Id == dto.Id)
                          ?? throw new NotFoundException($"Birim {dto.Id} bulunamadı.");
 
-            var eskiUstId = entity.UstId;
-            var eskiYol = entity.Yol;
-            var eskiSeviye = entity.Seviye;
+            var hedef = await UstBirimiDogrulaAsync(dto.UstId);
 
-            if (dto.UstId != eskiUstId)
+            if (dto.UstId != entity.UstId)
             {
                 if (dto.UstId == entity.Id)
                     throw new Core.Exceptions.ValidationException("Bir birim kendisine bağlanamaz.");
 
-                var altAgac = await birimRepository.GetAltAgacEntityAsync(eskiYol);
-                if (dto.UstId.HasValue && altAgac.Any(b => b.Id == dto.UstId.Value))
+                // Nested set aralığı iç içeliği doğrudan söyler: hedef üst birim
+                // taşınacak dalın aralığına düşüyorsa ağaç kendi içine kapanır.
+                if (hedef is not null && hedef.Sol > entity.Sol && hedef.Sag < entity.Sag)
                     throw new Core.Exceptions.ValidationException(
                         "Bir birim kendi alt birimlerinden birine bağlanamaz.");
             }
-
-            var yeniUst = await UstBirimiDogrulaAsync(dto.UstId);
 
             entity.Ad = dto.Ad;
             entity.Kod = dto.Kod;
             entity.Sira = dto.Sira;
             entity.UstId = dto.UstId;
-            entity.Seviye = yeniUst is null ? 0 : yeniUst.Seviye + 1;
-            entity.Yol = YolHesapla(yeniUst?.Yol, entity.Id);
             entity.UpdatedDate = DateTime.Now;
 
             await repository.UpdateAsync(entity);
 
-            if (entity.Yol != eskiYol)
-                await AltAgaciTasiAsync(eskiYol, entity.Yol, entity.Seviye - eskiSeviye, entity.Id);
+            // Yalnızca üst birim değil, Ad ve Sıra da kardeş düzenini
+            // değiştirebildiği için numaralandırma her güncellemede tazelenir.
+            // İşlem tutarlıysa hiçbir satıra dokunulmaz.
+            await birimRepository.AgaciYenidenKurAsync(entity.OrganizasyonId);
 
             return mapper.Map<UpdateBirimDto>(entity);
         });
@@ -156,6 +154,8 @@ public class BirimManager(
 
             entity.Durum = !entity.Durum;
 
+            // Pasife alma yalnızca durumu değiştirir, satır ağaçta kalır;
+            // numaralandırma etkilenmez.
             await repository.UpdateAsync(entity);
         });
     }
@@ -165,9 +165,6 @@ public class BirimManager(
         return await birimRepository.AnyAsync(x => x.Id == id);
     }
 
-    private static string YolHesapla(string? ustYol, int id) =>
-        string.IsNullOrEmpty(ustYol) ? $"/{id}/" : $"{ustYol}{id}/";
-
     private async Task<Birim?> UstBirimiDogrulaAsync(int? ustId)
     {
         if (!ustId.HasValue)
@@ -175,27 +172,5 @@ public class BirimManager(
 
         return await birimRepository.GetByIdAsync(ustId.Value)
                ?? throw new NotFoundException($"Üst birim {ustId.Value} bulunamadı.");
-    }
-
-    /// <summary>
-    /// Üst birim değiştiğinde alt ağacın tamamındaki Yol ve Seviye değerlerini yeniden yazar.
-    /// </summary>
-    private async Task AltAgaciTasiAsync(string eskiYol, string yeniYol, int seviyeFarki, int kokId)
-    {
-        var altAgac = (await birimRepository.GetAltAgacEntityAsync(eskiYol))
-            .Where(b => b.Id != kokId)
-            .ToList();
-
-        if (altAgac.Count == 0)
-            return;
-
-        foreach (var alt in altAgac)
-        {
-            alt.Yol = string.Concat(yeniYol, alt.Yol.AsSpan(eskiYol.Length));
-            alt.Seviye += seviyeFarki;
-            alt.UpdatedDate = DateTime.Now;
-        }
-
-        await unitOfWork.GetRepository<Birim, int>().UpdateRangeAsync(altAgac);
     }
 }

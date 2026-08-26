@@ -12,7 +12,7 @@ public interface IBirimRepository : IGenericRepository<Birim, int>
         DataTablesRequest request,
         Expression<Func<ListBirimDto, bool>>? filter = null);
 
-    /// <summary>Kök birimler (üst birimi olmayanlar), sıra ve ada göre.</summary>
+    /// <summary>Kök birimler (üst birimi olmayanlar), ağaçtaki sıralarına göre.</summary>
     Task<List<BirimSecimDto>> GetKokBirimlerAsync(bool sadeceAktif = true);
 
     /// <summary>Verilen birimin tüm alt ağacı. Birimin kendisi dahil edilmez.</summary>
@@ -21,9 +21,18 @@ public interface IBirimRepository : IGenericRepository<Birim, int>
     /// <summary>Verilen birimin doğrudan çocukları.</summary>
     Task<List<Birim>> GetDogrudanAltBirimlerAsync(int ustId);
 
-    /// <summary>Alt ağaçtaki tüm birimler; üst birim taşındığında yol güncellemesi için.</summary>
-    Task<List<Birim>> GetAltAgacEntityAsync(string yolOneki);
+    /// <summary>Verilen düğümün alt ağacındaki birimler, ön sıralı gezinme sırasında.</summary>
+    Task<List<Birim>> GetAltAgacEntityAsync(Birim kok, bool kendisiDahil = false);
+
 
     /// <summary>Ağaç görünümü için tüm birimler, hiyerarşik sırada.</summary>
     Task<List<ListBirimDto>> GetAgacAsync();
+
+    /// <summary>
+    /// Kiracının ağacındaki türev sütunları (Sol, Sag, Seviye, Yol) komşuluk
+    /// bilgisinden (UstId + Sira + Ad) yeniden üretir ve değişen satırları yazar.
+    /// Yapısal her değişiklikten sonra çağrılır; yinelenebilir ve zaten tutarlı
+    /// bir ağaçta hiçbir satıra dokunmaz. Değişen satır sayısını döndürür.
+    /// </summary>
+    Task<int> AgaciYenidenKurAsync(int organizasyonId);
 }
